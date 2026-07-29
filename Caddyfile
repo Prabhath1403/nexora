@@ -1,0 +1,8 @@
+{
+    email prabhath@example.com
+}
+
+# Replace your-domain-or-ip.com with your Oracle Cloud IP or Custom Domain
+:80 {
+    reverse_proxy backend:8000
+}

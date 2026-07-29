@@ -1,0 +1,35 @@
+# Docker Build Ignore File
+.git
+.gitignore
+.vscode
+.idea
+.gemini
+
+# Frontend / Mobile (Not needed in backend container)
+frontend/
+
+# Python Cache & Environments
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.venv
+venv
+env
+*.egg-info
+.pytest_cache
+
+# Database & Storage
+postgres_data
+redis_data
+*.sqlite
+*.sqlite3
+
+# Secrets
+.env
+*.env
+
+# Logs & Temporary Files
+*.log
+tmp/
+temp/

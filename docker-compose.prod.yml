@@ -1,0 +1,60 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: nucleus-db-prod
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-nucleus_admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change_me_in_prod}
+      POSTGRES_DB: ${POSTGRES_DB:-nucleus_prod}
+    volumes:
+      - postgres_prod_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-nucleus_admin} -d ${POSTGRES_DB:-nucleus_prod}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: nucleus-redis-prod
+    restart: always
+    volumes:
+      - redis_prod_data:/data
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: nucleus-backend-prod
+    restart: always
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-nucleus_admin}:${POSTGRES_PASSWORD:-change_me_in_prod}@db:5432/${POSTGRES_DB:-nucleus_prod}
+      - REDIS_URL=redis://redis:6379/0
+      - SECRET_KEY=${SECRET_KEY}
+      - ENVIRONMENT=production
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+  caddy:
+    image: caddy:2-alpine
+    container_name: nucleus-caddy
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - backend
+
+volumes:
+  postgres_prod_data:
+  redis_prod_data:
+  caddy_data:
+  caddy_config:

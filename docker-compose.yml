@@ -1,0 +1,52 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: nucleus-db
+    restart: always
+    environment:
+      POSTGRES_USER: nucleus_user
+      POSTGRES_PASSWORD: nucleus_password
+      POSTGRES_DB: nucleus_db
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nucleus_user -d nucleus_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: nucleus-redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: nucleus-backend
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://nucleus_user:nucleus_password@db:5432/nucleus_db
+      - REDIS_URL=redis://redis:6379/0
+      - SECRET_KEY=super-secret-key-change-in-production-12345
+      - ENVIRONMENT=development
+    volumes:
+      - ./backend:/app
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+volumes:
+  postgres_data:
+  redis_data:
