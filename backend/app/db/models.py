@@ -126,7 +126,10 @@ class ActivityPing(Base):
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     window_title: Mapped[str] = mapped_column(String(500))
     app_name: Mapped[str] = mapped_column(String(255), default="unknown")
-    category: Mapped[str] = mapped_column(String(50), default="idle")  # work, learning, idle
+    app_class: Mapped[str] = mapped_column(String(255), default="")             # WM_CLASS from window manager
+    category: Mapped[str] = mapped_column(String(50), default="idle")           # work, learning, browsing, idle, afk
     duration_seconds: Mapped[int] = mapped_column(Integer, default=30)
+    project_hint: Mapped[str] = mapped_column(String(255), default="")          # Extracted project folder name
+    idle_ms: Mapped[int] = mapped_column(Integer, default=0)                    # Milliseconds of user idle time
     timestamp: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 

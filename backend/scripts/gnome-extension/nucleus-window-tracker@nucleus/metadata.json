@@ -1,0 +1,8 @@
+{
+  "uuid": "nucleus-window-tracker@nucleus",
+  "name": "Nucleus Window Tracker",
+  "description": "Exposes the focused window title and WM_CLASS via DBus for the Nucleus Activity Daemon.",
+  "version": 1,
+  "shell-version": ["45", "46", "47"],
+  "url": "https://github.com/Prabhath1403/nucleus"
+}
