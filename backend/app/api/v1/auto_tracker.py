@@ -213,6 +213,51 @@ async def app_breakdown(db: AsyncSession = Depends(get_db)):
     return {"breakdown": breakdown}
 
 
+@router.get("/app-details")
+async def get_app_details(app_name: str, db: AsyncSession = Depends(get_db)):
+    """
+    Returns detailed activities (web pages, projects, window titles) for a specific app today.
+    Example query: /api/v1/tracker/app-details?app_name=Brave
+    """
+    today_start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+
+    result = await db.execute(
+        select(
+            ActivityPing.window_title,
+            ActivityPing.project_hint,
+            ActivityPing.category,
+            func.sum(ActivityPing.duration_seconds).label("total_seconds"),
+            func.max(ActivityPing.timestamp).label("last_seen"),
+        )
+        .where(ActivityPing.timestamp >= today_start)
+        .where(func.lower(ActivityPing.app_name) == app_name.lower())
+        .group_by(ActivityPing.window_title, ActivityPing.project_hint, ActivityPing.category)
+        .order_by(func.sum(ActivityPing.duration_seconds).desc())
+        .limit(20)
+    )
+    rows = result.all()
+
+    activities = []
+    total_secs = 0
+    for row in rows:
+        secs = row.total_seconds or 0
+        total_secs += secs
+        activities.append({
+            "title": row.window_title or f"{app_name} Activity",
+            "project": row.project_hint or "",
+            "category": row.category,
+            "hours": round(secs / 3600, 2),
+            "minutes": int(secs // 60),
+            "last_seen": row.last_seen.isoformat() if row.last_seen else None,
+        })
+
+    return {
+        "app_name": app_name,
+        "total_hours": round(total_secs / 3600, 2),
+        "activities": activities,
+    }
+
+
 @router.get("/timeline")
 async def activity_timeline(db: AsyncSession = Depends(get_db)):
     """
