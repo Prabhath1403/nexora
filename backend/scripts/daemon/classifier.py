@@ -80,9 +80,25 @@ def extract_project_hint(wm_class: str, title: str) -> str:
 
         if " - " in title:
             parts = title.split(" - ")
+            ide_names = ("visual studio code", "vs code", "antigravity ide", "antigravity",
+                         "cursor", "pycharm", "intellij idea", "sublime text")
+            # Find the first part that looks like a project name (not an IDE or file name)
+            for part in parts:
+                cleaned = part.strip()
+                if not cleaned:
+                    continue
+                if cleaned.lower() in ide_names:
+                    continue
+                # Skip if it looks like a file name (has extension)
+                if "." in cleaned and len(cleaned.split(".")[-1]) <= 4:
+                    continue
+                # This is likely the project name
+                if len(cleaned) < 60:
+                    return cleaned.lower().replace(" ", "-")
+            # Fallback: use first part
             if len(parts) >= 2:
-                folder = parts[-2].strip() if len(parts) > 2 else parts[-1].strip()
-                for suffix in ("Visual Studio Code", "VS Code", "Antigravity", "Cursor", "PyCharm"):
+                folder = parts[0].strip()
+                for suffix in ("Visual Studio Code", "VS Code", "Antigravity IDE", "Antigravity", "Cursor", "PyCharm"):
                     folder = folder.replace(suffix, "").strip(" -")
                 if folder and len(folder) < 60:
                     return folder.lower().replace(" ", "-")

@@ -123,6 +123,53 @@ class _IntegrationsScreenState extends State<IntegrationsScreen> with WidgetsBin
     _fetchStatus();
   }
 
+  IconData _iconForApp(String appName) {
+    final lower = appName.toLowerCase();
+    if (lower.contains('antigravity')) return Icons.code_rounded;
+    if (lower.contains('code') || lower.contains('cursor') || lower.contains('pycharm')) return Icons.code_rounded;
+    if (lower.contains('terminal') || lower.contains('kitty') || lower.contains('alacritty')) return Icons.terminal_rounded;
+    if (lower.contains('brave') || lower.contains('chrome') || lower.contains('firefox') || lower.contains('edge')) return Icons.language_rounded;
+    if (lower.contains('docker')) return Icons.view_in_ar_rounded;
+    if (lower.contains('slack') || lower.contains('discord')) return Icons.chat_rounded;
+    return Icons.laptop_mac_rounded;
+  }
+
+  Color _iconColorForApp(String appName) {
+    final lower = appName.toLowerCase();
+    if (lower.contains('antigravity')) return AppTheme.accentPurple;
+    if (lower.contains('code') || lower.contains('cursor')) return AppTheme.accent;
+    if (lower.contains('terminal')) return AppTheme.accentGreen;
+    if (lower.contains('brave') || lower.contains('chrome')) return AppTheme.accentOrange;
+    if (lower.contains('docker')) return AppTheme.accentTeal;
+    if (lower.contains('firefox')) return AppTheme.accentOrange;
+    return AppTheme.accent;
+  }
+
+  String _appSubtitle(String appName) {
+    final lower = appName.toLowerCase();
+    if (lower.contains('brave') || lower.contains('chrome') || lower.contains('firefox')) return "Web Browsing & Research";
+    if (lower.contains('antigravity') || lower.contains('code') || lower.contains('cursor')) return "Development & Workspace";
+    if (lower.contains('terminal')) return "Command Line Sessions";
+    if (lower.contains('docker')) return "Containers & DevOps";
+    return "Application Activity";
+  }
+
+  IconData _activityIcon(String appName) {
+    final lower = appName.toLowerCase();
+    if (lower.contains('brave') || lower.contains('chrome') || lower.contains('firefox')) return Icons.public_rounded;
+    if (lower.contains('terminal')) return Icons.terminal_rounded;
+    if (lower.contains('docker')) return Icons.view_in_ar_rounded;
+    return Icons.folder_open_rounded;
+  }
+
+  String _appSectionLabel(String appName) {
+    final lower = appName.toLowerCase();
+    if (lower.contains('brave') || lower.contains('chrome') || lower.contains('firefox')) return "OPEN WEBSITES & PAGES TODAY";
+    if (lower.contains('terminal')) return "TERMINAL SESSIONS TODAY";
+    if (lower.contains('docker')) return "CONTAINERS & SERVICES TODAY";
+    return "PROJECTS & WINDOW ACTIVITIES TODAY";
+  }
+
   void _showAppDetailsModal(BuildContext context, String appName) {
     showModalBottomSheet(
       context: context,
@@ -154,13 +201,13 @@ class _IntegrationsScreenState extends State<IntegrationsScreen> with WidgetsBin
                   ),
                   const SizedBox(height: 20),
 
-                  // Header
+                  // Header with app-specific icon and color
                   Row(
                     children: [
                       Container(
                         width: 44, height: 44,
-                        decoration: BoxDecoration(color: AppTheme.accent.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(12)),
-                        child: const Icon(Icons.apps_rounded, color: AppTheme.accent, size: 24),
+                        decoration: BoxDecoration(color: _iconColorForApp(appName).withValues(alpha: 0.15), borderRadius: BorderRadius.circular(12)),
+                        child: Icon(_iconForApp(appName), color: _iconColorForApp(appName), size: 24),
                       ),
                       const SizedBox(width: 14),
                       Expanded(
@@ -169,24 +216,20 @@ class _IntegrationsScreenState extends State<IntegrationsScreen> with WidgetsBin
                           children: [
                             Text(appName, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
                             Text(
-                              appName.toLowerCase().contains('brave') || appName.toLowerCase().contains('chrome') || appName.toLowerCase().contains('firefox')
-                                ? "Web Browsing & Research"
-                                : "Development & Workspace",
+                              _appSubtitle(appName),
                               style: const TextStyle(fontSize: 12, color: AppTheme.secondaryLabel),
                             ),
                           ],
                         ),
                       ),
                       Text("${totalHours.toStringAsFixed(1)}h",
-                          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.accent)),
+                          style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: _iconColorForApp(appName))),
                     ],
                   ),
                   const SizedBox(height: 20),
 
                   Text(
-                    appName.toLowerCase().contains('brave') || appName.toLowerCase().contains('chrome') || appName.toLowerCase().contains('firefox')
-                        ? "OPEN WEBSITES & PAGES TODAY"
-                        : "PROJECTS & WINDOW ACTIVITIES TODAY",
+                    _appSectionLabel(appName),
                     style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppTheme.secondaryLabel, letterSpacing: 0.5),
                   ),
                   const SizedBox(height: 10),
@@ -220,10 +263,8 @@ class _IntegrationsScreenState extends State<IntegrationsScreen> with WidgetsBin
                                 child: ListTile(
                                   dense: true,
                                   leading: Icon(
-                                    appName.toLowerCase().contains('brave') || appName.toLowerCase().contains('chrome')
-                                        ? Icons.public_rounded
-                                        : Icons.folder_open_rounded,
-                                    color: AppTheme.accent, size: 20,
+                                    _activityIcon(appName),
+                                    color: _iconColorForApp(appName), size: 20,
                                   ),
                                   title: Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600), maxLines: 2, overflow: TextOverflow.ellipsis),
                                   subtitle: project.isNotEmpty
@@ -259,14 +300,14 @@ class _IntegrationsScreenState extends State<IntegrationsScreen> with WidgetsBin
     );
   }
 
-  void _showLaptopTelemetryModal(BuildContext context) {
+  void _showLaptopTelemetryModal(BuildContext parentContext) {
     final activeApp = daemonLastApp ?? (recentPingDetail?['app_name'] ?? 'Unknown');
     final activeTitle = recentPingDetail?['window_title'] ?? 'No active window details';
     final project = daemonLastProject ?? recentPingDetail?['project_hint'] ?? '';
     final category = daemonLastCategory ?? recentPingDetail?['category'] ?? 'work';
 
     showModalBottomSheet(
-      context: context,
+      context: parentContext,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) {
@@ -414,7 +455,9 @@ class _IntegrationsScreenState extends State<IntegrationsScreen> with WidgetsBin
                           dense: true,
                           onTap: () {
                             Navigator.pop(context);
-                            _showAppDetailsModal(context, name);
+                            Future.delayed(const Duration(milliseconds: 250), () {
+                              _showAppDetailsModal(parentContext, name);
+                            });
                           },
                           title: Row(
                             children: [

@@ -118,6 +118,12 @@ def get_focused_window_process_fallback() -> Optional[Dict[str, Any]]:
                 if not cmd or "nucleus_daemon" in cmd_lower or ("python" in cmd_lower and "daemon" in cmd_lower):
                     continue
 
+                # Skip Electron/Chromium helper subprocesses — they share binaries
+                # across Docker Desktop, VSCode, Chrome, Brave etc. and cause mismatches
+                if "/proc/self/exe" in cmd or any(f"--type={t}" in cmd_lower for t in
+                        ("utility", "renderer", "gpu-process", "zygote", "crashpad-handler", "broker")):
+                    continue
+
                 pid = int(p_path.split("/")[2])
 
                 # EXPLICIT ANTIGRAVITY FIX: If antigravity is in path, FORCE app to Antigravity!

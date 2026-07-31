@@ -205,10 +205,8 @@ class _WorkHoursScreenState extends State<WorkHoursScreen> {
                                 child: ListTile(
                                   dense: true,
                                   leading: Icon(
-                                    appName.toLowerCase().contains('brave') || appName.toLowerCase().contains('chrome')
-                                        ? Icons.public_rounded
-                                        : Icons.folder_open_rounded,
-                                    color: AppTheme.accent, size: 20,
+                                    _getAppIcon(appName),
+                                    color: _getAppColor(appName), size: 20,
                                   ),
                                   title: Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600), maxLines: 2, overflow: TextOverflow.ellipsis),
                                   subtitle: project.isNotEmpty
