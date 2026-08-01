@@ -89,6 +89,42 @@ class ApiService {
     }
   }
 
+  static Future<Map<String, dynamic>?> fetchGoogleCalendarEvents() async {
+    try {
+      final response = await http.get(Uri.parse('$baseUrl/integrations/google/calendar/events'));
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      }
+    } catch (e) {
+      print("Error fetching Google Calendar events: $e");
+    }
+    return null;
+  }
+
+  static Future<Map<String, dynamic>?> fetchGmailMessages() async {
+    try {
+      final response = await http.get(Uri.parse('$baseUrl/integrations/google/gmail/messages'));
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      }
+    } catch (e) {
+      print("Error fetching Gmail messages: $e");
+    }
+    return null;
+  }
+
+  static Future<Map<String, dynamic>?> fetchGoogleSummary() async {
+    try {
+      final response = await http.get(Uri.parse('$baseUrl/integrations/google/summary'));
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      }
+    } catch (e) {
+      print("Error fetching Google summary: $e");
+    }
+    return null;
+  }
+
   static Future<Map<String, dynamic>?> fetchTrackerSummary() async {
     try {
       final response = await http.get(Uri.parse('$baseUrl/tracker/summary'));

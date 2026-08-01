@@ -490,10 +490,167 @@ async def google_calendar_events(db: AsyncSession = Depends(get_db)):
                 "summary": item.get("summary", "Untitled Event"),
                 "start": item.get("start", {}).get("dateTime", item.get("start", {}).get("date", "")),
                 "end": item.get("end", {}).get("dateTime", item.get("end", {}).get("date", "")),
+                "location": item.get("location", ""),
+                "htmlLink": item.get("htmlLink", ""),
+                "hangoutLink": item.get("hangoutLink", ""),
                 "status": item.get("status", "confirmed"),
             })
 
     return {"events": events}
+
+
+@router.get("/google/gmail/messages")
+async def google_gmail_messages(db: AsyncSession = Depends(get_db)):
+    """Fetch recent Gmail messages and unread email count."""
+    result = await db.execute(select(IntegrationToken).where(IntegrationToken.service_name == "google"))
+    token = result.scalar_one_or_none()
+
+    if not token:
+        raise HTTPException(status_code=401, detail="Google not connected")
+
+    if token.expires_at and token.expires_at < datetime.utcnow():
+        token = await _refresh_google_token(token, db)
+
+    async with httpx.AsyncClient() as client:
+        headers = {"Authorization": f"Bearer {token.access_token}"}
+
+        # Fetch list of messages
+        list_resp = await client.get(
+            "https://gmail.googleapis.com/gmail/v1/users/me/messages",
+            params={"maxResults": 10, "q": "in:inbox"},
+            headers=headers,
+        )
+
+        if list_resp.status_code == 401:
+            token = await _refresh_google_token(token, db)
+            headers = {"Authorization": f"Bearer {token.access_token}"}
+            list_resp = await client.get(
+                "https://gmail.googleapis.com/gmail/v1/users/me/messages",
+                params={"maxResults": 10, "q": "in:inbox"},
+                headers=headers,
+            )
+
+        if list_resp.status_code != 200:
+            raise HTTPException(status_code=502, detail="Failed to fetch Gmail messages")
+
+        list_data = list_resp.json()
+        raw_messages = list_data.get("messages", [])
+
+        # Count unread messages
+        unread_resp = await client.get(
+            "https://gmail.googleapis.com/gmail/v1/users/me/messages",
+            params={"q": "is:unread in:inbox", "maxResults": 1},
+            headers=headers,
+        )
+        unread_count = 0
+        if unread_resp.status_code == 200:
+            unread_count = unread_resp.json().get("resultSizeEstimate", 0)
+
+        messages = []
+        for msg_item in raw_messages[:8]:
+            msg_id = msg_item.get("id")
+            detail_resp = await client.get(
+                f"https://gmail.googleapis.com/gmail/v1/users/me/messages/{msg_id}",
+                params={"format": "full"},
+                headers=headers,
+            )
+            if detail_resp.status_code == 200:
+                detail = detail_resp.json()
+                snippet = detail.get("snippet", "")
+                label_ids = detail.get("labelIds", [])
+                is_unread = "UNREAD" in label_ids
+
+                payload = detail.get("payload", {})
+                headers_list = payload.get("headers", [])
+
+                subject = "No Subject"
+                sender = "Unknown Sender"
+                date_str = ""
+
+                for h in headers_list:
+                    h_name = h.get("name", "").lower()
+                    if h_name == "subject":
+                        subject = h.get("value", "No Subject")
+                    elif h_name == "from":
+                        sender = h.get("value", "Unknown Sender")
+                    elif h_name == "date":
+                        date_str = h.get("value", "")
+
+                messages.append({
+                    "id": msg_id,
+                    "subject": subject,
+                    "from": sender,
+                    "snippet": snippet,
+                    "date": date_str,
+                    "is_unread": is_unread,
+                })
+
+    return {
+        "unread_count": unread_count,
+        "total_messages": len(messages),
+        "messages": messages,
+    }
+
+
+@router.get("/google/summary")
+async def google_summary(db: AsyncSession = Depends(get_db)):
+    """Fetch combined Google Calendar events & Gmail unread count for Dashboard."""
+    result = await db.execute(select(IntegrationToken).where(IntegrationToken.service_name == "google"))
+    token = result.scalar_one_or_none()
+
+    if not token:
+        return {"connected": False, "events_today": [], "unread_emails": 0}
+
+    if token.expires_at and token.expires_at < datetime.utcnow():
+        try:
+            token = await _refresh_google_token(token, db)
+        except Exception:
+            return {"connected": False, "events_today": [], "unread_emails": 0}
+
+    events = []
+    unread_emails = 0
+
+    async with httpx.AsyncClient() as client:
+        headers = {"Authorization": f"Bearer {token.access_token}"}
+        now = datetime.utcnow().isoformat() + "Z"
+
+        # Fetch calendar events
+        try:
+            cal_resp = await client.get(
+                "https://www.googleapis.com/calendar/v3/calendars/primary/events",
+                params={"timeMin": now, "maxResults": 5, "singleEvents": True, "orderBy": "startTime"},
+                headers=headers,
+            )
+            if cal_resp.status_code == 200:
+                for item in cal_resp.json().get("items", []):
+                    events.append({
+                        "id": item.get("id", ""),
+                        "summary": item.get("summary", "Untitled Event"),
+                        "start": item.get("start", {}).get("dateTime", item.get("start", {}).get("date", "")),
+                        "end": item.get("end", {}).get("dateTime", item.get("end", {}).get("date", "")),
+                        "hangoutLink": item.get("hangoutLink", ""),
+                    })
+        except Exception:
+            pass
+
+        # Fetch unread emails count
+        try:
+            gmail_resp = await client.get(
+                "https://gmail.googleapis.com/gmail/v1/users/me/messages",
+                params={"q": "is:unread in:inbox", "maxResults": 1},
+                headers=headers,
+            )
+            if gmail_resp.status_code == 200:
+                unread_emails = gmail_resp.json().get("resultSizeEstimate", 0)
+        except Exception:
+            pass
+
+    return {
+        "connected": True,
+        "email": token.metadata_json.get("email", ""),
+        "events_today": events,
+        "unread_emails": unread_emails,
+    }
 
 
 # --- Helpers ---

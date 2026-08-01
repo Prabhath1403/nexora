@@ -305,6 +305,248 @@ class _IntegrationsScreenState extends State<IntegrationsScreen> with WidgetsBin
     );
   }
 
+  void _showGoogleCalendarModal(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return FutureBuilder<Map<String, dynamic>?>(
+          future: ApiService.fetchGoogleCalendarEvents(),
+          builder: (context, snapshot) {
+            final data = snapshot.data;
+            final events = (data?['events'] as List?) ?? [];
+
+            return Container(
+              decoration: const BoxDecoration(
+                color: AppTheme.secondaryBg,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+              ),
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 40, height: 5,
+                      decoration: BoxDecoration(color: AppTheme.tertiaryBg, borderRadius: BorderRadius.circular(10)),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+
+                  Row(
+                    children: [
+                      Container(
+                        width: 44, height: 44,
+                        decoration: BoxDecoration(color: AppTheme.accentOrange.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(12)),
+                        child: const Icon(Icons.calendar_month_rounded, color: AppTheme.accentOrange, size: 24),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text("Google Calendar", style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
+                            Text(googleEmail ?? "Events & Focus Blocks", style: const TextStyle(fontSize: 12, color: AppTheme.secondaryLabel)),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+
+                  const Text("UPCOMING EVENTS & MEETINGS", style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppTheme.secondaryLabel, letterSpacing: 0.5)),
+                  const SizedBox(height: 10),
+
+                  if (snapshot.connectionState == ConnectionState.waiting)
+                    const Padding(
+                      padding: EdgeInsets.all(30),
+                      child: Center(child: CupertinoActivityIndicator()),
+                    )
+                  else if (events.isEmpty)
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 20),
+                      child: Center(child: Text("No upcoming calendar events found", style: TextStyle(color: AppTheme.secondaryLabel, fontSize: 13))),
+                    )
+                  else
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(maxHeight: 320),
+                      child: SingleChildScrollView(
+                        physics: const BouncingScrollPhysics(),
+                        child: Container(
+                          decoration: BoxDecoration(color: AppTheme.background, borderRadius: BorderRadius.circular(14)),
+                          child: Column(
+                            children: List.generate(events.length, (i) {
+                              final event = events[i];
+                              final summary = (event['summary'] ?? 'Event').toString();
+                              final start = (event['start'] ?? '').toString();
+                              final meetLink = (event['hangoutLink'] ?? '').toString();
+
+                              return Material(
+                                color: Colors.transparent,
+                                child: ListTile(
+                                  dense: true,
+                                  leading: const Icon(Icons.event_rounded, color: AppTheme.accentOrange, size: 20),
+                                  title: Text(summary, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600), maxLines: 2, overflow: TextOverflow.ellipsis),
+                                  subtitle: Text(start.isNotEmpty ? start.substring(0, start.length > 16 ? 16 : start.length).replaceFirst('T', ' ') : '',
+                                      style: const TextStyle(fontSize: 11, color: AppTheme.secondaryLabel)),
+                                  trailing: meetLink.isNotEmpty
+                                      ? const Icon(Icons.video_call_rounded, color: AppTheme.accentGreen, size: 20)
+                                      : null,
+                                ),
+                              );
+                            }),
+                          ),
+                        ),
+                      ),
+                    ),
+                  const SizedBox(height: 20),
+
+                  SizedBox(
+                    width: double.infinity,
+                    child: CupertinoButton(
+                      color: AppTheme.tertiaryBg,
+                      borderRadius: BorderRadius.circular(12),
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text("Close", style: TextStyle(fontWeight: FontWeight.w600, color: AppTheme.label)),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _showGmailModal(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return FutureBuilder<Map<String, dynamic>?>(
+          future: ApiService.fetchGmailMessages(),
+          builder: (context, snapshot) {
+            final data = snapshot.data;
+            final messages = (data?['messages'] as List?) ?? [];
+            final unreadCount = (data?['unread_count'] ?? 0).toInt();
+
+            return Container(
+              decoration: const BoxDecoration(
+                color: AppTheme.secondaryBg,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+              ),
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 40, height: 5,
+                      decoration: BoxDecoration(color: AppTheme.tertiaryBg, borderRadius: BorderRadius.circular(10)),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+
+                  Row(
+                    children: [
+                      Container(
+                        width: 44, height: 44,
+                        decoration: BoxDecoration(color: AppTheme.accentRed.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(12)),
+                        child: const Icon(Icons.mail_outline_rounded, color: AppTheme.accentRed, size: 24),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text("Gmail Inbox", style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
+                            Text(googleEmail ?? "Unread messages & notifications", style: const TextStyle(fontSize: 12, color: AppTheme.secondaryLabel)),
+                          ],
+                        ),
+                      ),
+                      if (unreadCount > 0)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(color: AppTheme.accentRed, borderRadius: BorderRadius.circular(12)),
+                          child: Text("$unreadCount unread", style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w700)),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+
+                  const Text("RECENT INBOX MESSAGES", style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppTheme.secondaryLabel, letterSpacing: 0.5)),
+                  const SizedBox(height: 10),
+
+                  if (snapshot.connectionState == ConnectionState.waiting)
+                    const Padding(
+                      padding: EdgeInsets.all(30),
+                      child: Center(child: CupertinoActivityIndicator()),
+                    )
+                  else if (messages.isEmpty)
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 20),
+                      child: Center(child: Text("No recent messages found in inbox", style: TextStyle(color: AppTheme.secondaryLabel, fontSize: 13))),
+                    )
+                  else
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(maxHeight: 320),
+                      child: SingleChildScrollView(
+                        physics: const BouncingScrollPhysics(),
+                        child: Container(
+                          decoration: BoxDecoration(color: AppTheme.background, borderRadius: BorderRadius.circular(14)),
+                          child: Column(
+                            children: List.generate(messages.length, (i) {
+                              final msg = messages[i];
+                              final subject = (msg['subject'] ?? 'No Subject').toString();
+                              final sender = (msg['from'] ?? 'Sender').toString();
+                              final snippet = (msg['snippet'] ?? '').toString();
+                              final isUnread = msg['is_unread'] == true;
+
+                              return Material(
+                                color: Colors.transparent,
+                                child: ListTile(
+                                  dense: true,
+                                  leading: Icon(
+                                    isUnread ? Icons.mark_email_unread_rounded : Icons.mail_rounded,
+                                    color: isUnread ? AppTheme.accentRed : AppTheme.secondaryLabel, size: 20,
+                                  ),
+                                  title: Text(subject, style: TextStyle(fontSize: 14, fontWeight: isUnread ? FontWeight.w700 : FontWeight.w500), maxLines: 1, overflow: TextOverflow.ellipsis),
+                                  subtitle: Text("$sender · $snippet",
+                                      style: const TextStyle(fontSize: 11, color: AppTheme.secondaryLabel), maxLines: 1, overflow: TextOverflow.ellipsis),
+                                ),
+                              );
+                            }),
+                          ),
+                        ),
+                      ),
+                    ),
+                  const SizedBox(height: 20),
+
+                  SizedBox(
+                    width: double.infinity,
+                    child: CupertinoButton(
+                      color: AppTheme.tertiaryBg,
+                      borderRadius: BorderRadius.circular(12),
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text("Close", style: TextStyle(fontWeight: FontWeight.w600, color: AppTheme.label)),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   void _showLaptopTelemetryModal(BuildContext parentContext) {
     final activeApp = daemonLastApp ?? (recentPingDetail?['app_name'] ?? 'Unknown');
     final activeTitle = recentPingDetail?['window_title'] ?? 'No active window details';
@@ -637,7 +879,7 @@ class _IntegrationsScreenState extends State<IntegrationsScreen> with WidgetsBin
                     icon: Icons.calendar_month_rounded,
                     color: AppTheme.accentOrange,
                     isConnected: isGoogleConnected,
-                    onTap: isGoogleConnected ? () => _disconnectService('google') : _connectGoogle,
+                    onTap: isGoogleConnected ? () => _showGoogleCalendarModal(context) : _connectGoogle,
                   ),
                   // Gmail Row
                   _buildServiceRow(
@@ -646,7 +888,7 @@ class _IntegrationsScreenState extends State<IntegrationsScreen> with WidgetsBin
                     icon: Icons.mail_outline_rounded,
                     color: AppTheme.accentRed,
                     isConnected: isGoogleConnected,
-                    onTap: isGoogleConnected ? () => _disconnectService('google') : _connectGoogle,
+                    onTap: isGoogleConnected ? () => _showGmailModal(context) : _connectGoogle,
                   ),
                 ]),
               ],
