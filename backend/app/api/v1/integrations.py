@@ -316,7 +316,7 @@ async def google_auth_url():
             detail="Google OAuth is not configured. Set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in .env"
         )
 
-    redirect_uri = f"{settings.BACKEND_URL}/api/v1/integrations/google/callback"
+    redirect_uri = "http://localhost:8000/api/v1/integrations/google/callback"
     params = {
         "client_id": settings.GOOGLE_CLIENT_ID,
         "redirect_uri": redirect_uri,
@@ -339,7 +339,7 @@ async def google_callback(code: str, state: str = "", db: AsyncSession = Depends
     if not settings.GOOGLE_CLIENT_ID or not settings.GOOGLE_CLIENT_SECRET:
         raise HTTPException(status_code=400, detail="Google OAuth not configured")
 
-    redirect_uri = f"{settings.BACKEND_URL}/api/v1/integrations/google/callback"
+    redirect_uri = "http://localhost:8000/api/v1/integrations/google/callback"
 
     async with httpx.AsyncClient() as client:
         # Exchange code for tokens
