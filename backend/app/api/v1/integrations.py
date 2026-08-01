@@ -305,6 +305,8 @@ GOOGLE_USERINFO_URL = "https://www.googleapis.com/oauth2/v2/userinfo"
 GOOGLE_SCOPES = "https://www.googleapis.com/auth/calendar.readonly https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile"
 
 
+from urllib.parse import urlencode
+
 @router.get("/google/auth-url")
 async def google_auth_url():
     """Generate the Google OAuth2 authorization URL."""
@@ -315,16 +317,16 @@ async def google_auth_url():
         )
 
     redirect_uri = f"{settings.BACKEND_URL}/api/v1/integrations/google/callback"
-    url = (
-        f"{GOOGLE_AUTH_URL}"
-        f"?client_id={settings.GOOGLE_CLIENT_ID}"
-        f"&redirect_uri={redirect_uri}"
-        f"&response_type=code"
-        f"&scope={GOOGLE_SCOPES}"
-        f"&access_type=offline"
-        f"&prompt=consent"
-        f"&state=nucleus-google-auth"
-    )
+    params = {
+        "client_id": settings.GOOGLE_CLIENT_ID,
+        "redirect_uri": redirect_uri,
+        "response_type": "code",
+        "scope": GOOGLE_SCOPES,
+        "access_type": "offline",
+        "prompt": "consent",
+        "state": "nucleus-google-auth",
+    }
+    url = f"{GOOGLE_AUTH_URL}?{urlencode(params)}"
     return {"auth_url": url}
 
 
