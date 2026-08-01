@@ -4,7 +4,7 @@ Activity Classifier & Project Context Extractor
 
 from typing import Tuple
 from .config import (
-    WORK_APPS, LEARNING_APPS, IDLE_APPS,
+    WORK_APPS, LEARNING_APPS, MEDIA_APPS, IDLE_APPS,
     LEARNING_KEYWORDS, WORK_KEYWORDS, PROJECT_KEYWORDS,
     AFK_THRESHOLD_MS, IDLE_THRESHOLD_MS
 )
@@ -12,7 +12,7 @@ from .config import (
 def classify_activity(wm_class: str, title: str, idle_ms: int) -> str:
     """
     Classify the current activity into a category.
-    Priority: afk > idle > learning > work > browsing > idle
+    Priority: afk > idle > media > learning > work > browsing > idle
     """
     if idle_ms >= AFK_THRESHOLD_MS:
         return "afk"
@@ -22,11 +22,15 @@ def classify_activity(wm_class: str, title: str, idle_ms: int) -> str:
     wm_lower = wm_class.lower().strip()
     title_lower = title.lower()
 
+    # Check media app (Spotify, etc.)
+    if wm_lower in MEDIA_APPS or any(app in wm_lower for app in MEDIA_APPS):
+        return "media"
+
     # Check idle app
     if wm_lower in IDLE_APPS or any(app in wm_lower for app in IDLE_APPS):
         return "idle"
 
-    # Check work app
+    # Check work app (Terminal, IDEs, etc.)
     if wm_lower in WORK_APPS or any(app in wm_lower for app in WORK_APPS):
         if any(term in wm_lower for term in ("terminal", "kitty", "alacritty", "tilix", "wezterm", "foot", "konsole")):
             for kw in LEARNING_KEYWORDS:
@@ -38,7 +42,7 @@ def classify_activity(wm_class: str, title: str, idle_ms: int) -> str:
     if wm_lower in LEARNING_APPS or any(app in wm_lower for app in LEARNING_APPS):
         return "learning"
 
-    # Browser classification
+    # Browser classification (Chrome, Firefox, Brave)
     if any(b in wm_lower for b in ("chrome", "chromium", "firefox", "brave", "edge", "opera", "vivaldi")):
         for kw in LEARNING_KEYWORDS:
             if kw in title_lower:
@@ -117,6 +121,9 @@ def extract_project_hint(wm_class: str, title: str) -> str:
                 if project:
                     return project.lower()
 
+    if "claude" in title_lower or "chatgpt" in title_lower or "gemini" in title_lower:
+        return "claude-ai"
+
     if "github" in title_lower and "·" in title:
         parts = title.split("·")
         for part in parts:
@@ -132,10 +139,19 @@ def extract_project_hint(wm_class: str, title: str) -> str:
 def humanize_app_name(wm_class: str, title: str) -> str:
     """Convert WM_CLASS or title to a clean human-readable app name."""
     wm_lower = wm_class.lower().strip()
+    title_lower = title.lower().strip()
 
     # STRICT MATCH FOR ANTIGRAVITY
-    if "antigravity" in wm_lower or "antigravity" in title.lower():
+    if "antigravity" in wm_lower or "antigravity" in title_lower:
         return "Antigravity"
+
+    # STRICT MATCH FOR SPOTIFY
+    if "spotify" in wm_lower or "spotify" in title_lower:
+        return "Spotify"
+
+    # STRICT MATCH FOR TERMINAL
+    if any(t in wm_lower for t in ("org.gnome.terminal", "gnome-terminal", "gnome-terminal-server", "terminal")):
+        return "Terminal"
 
     name_map = {
         "code": "VSCode",
@@ -148,6 +164,9 @@ def humanize_app_name(wm_class: str, title: str) -> str:
         "android-studio": "Android Studio",
         "gnome-terminal": "Terminal",
         "gnome-terminal-server": "Terminal",
+        "org.gnome.terminal": "Terminal",
+        "org.gnome.terminal.desktop": "Terminal",
+        "spotify": "Spotify",
         "kitty": "Kitty",
         "alacritty": "Alacritty",
         "google-chrome": "Chrome",

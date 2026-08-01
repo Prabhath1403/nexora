@@ -91,6 +91,8 @@ class _WorkHoursScreenState extends State<WorkHoursScreen> {
       return Icons.code_rounded;
     } else if (lower.contains('terminal') || lower.contains('kitty') || lower.contains('alacritty')) {
       return Icons.terminal_rounded;
+    } else if (lower.contains('spotify') || lower.contains('music')) {
+      return Icons.headphones_rounded;
     } else if (lower.contains('chrome') || lower.contains('firefox') || lower.contains('brave') || lower.contains('edge')) {
       return Icons.language_rounded;
     } else if (lower.contains('docker')) {
@@ -104,6 +106,7 @@ class _WorkHoursScreenState extends State<WorkHoursScreen> {
     if (lower.contains('antigravity')) return AppTheme.accentPurple;
     if (lower.contains('code')) return AppTheme.accent;
     if (lower.contains('terminal')) return AppTheme.accentGreen;
+    if (lower.contains('spotify')) return const Color(0xFF1DB954);
     if (lower.contains('brave') || lower.contains('chrome')) return AppTheme.accentOrange;
     return AppTheme.accentTeal;
   }

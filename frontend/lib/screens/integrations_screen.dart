@@ -128,6 +128,7 @@ class _IntegrationsScreenState extends State<IntegrationsScreen> with WidgetsBin
     if (lower.contains('antigravity')) return Icons.code_rounded;
     if (lower.contains('code') || lower.contains('cursor') || lower.contains('pycharm')) return Icons.code_rounded;
     if (lower.contains('terminal') || lower.contains('kitty') || lower.contains('alacritty')) return Icons.terminal_rounded;
+    if (lower.contains('spotify') || lower.contains('music')) return Icons.headphones_rounded;
     if (lower.contains('brave') || lower.contains('chrome') || lower.contains('firefox') || lower.contains('edge')) return Icons.language_rounded;
     if (lower.contains('docker')) return Icons.view_in_ar_rounded;
     if (lower.contains('slack') || lower.contains('discord')) return Icons.chat_rounded;
@@ -139,6 +140,7 @@ class _IntegrationsScreenState extends State<IntegrationsScreen> with WidgetsBin
     if (lower.contains('antigravity')) return AppTheme.accentPurple;
     if (lower.contains('code') || lower.contains('cursor')) return AppTheme.accent;
     if (lower.contains('terminal')) return AppTheme.accentGreen;
+    if (lower.contains('spotify')) return const Color(0xFF1DB954);
     if (lower.contains('brave') || lower.contains('chrome')) return AppTheme.accentOrange;
     if (lower.contains('docker')) return AppTheme.accentTeal;
     if (lower.contains('firefox')) return AppTheme.accentOrange;
@@ -150,6 +152,7 @@ class _IntegrationsScreenState extends State<IntegrationsScreen> with WidgetsBin
     if (lower.contains('brave') || lower.contains('chrome') || lower.contains('firefox')) return "Web Browsing & Research";
     if (lower.contains('antigravity') || lower.contains('code') || lower.contains('cursor')) return "Development & Workspace";
     if (lower.contains('terminal')) return "Command Line Sessions";
+    if (lower.contains('spotify')) return "Audio & Music Player";
     if (lower.contains('docker')) return "Containers & DevOps";
     return "Application Activity";
   }
@@ -158,6 +161,7 @@ class _IntegrationsScreenState extends State<IntegrationsScreen> with WidgetsBin
     final lower = appName.toLowerCase();
     if (lower.contains('brave') || lower.contains('chrome') || lower.contains('firefox')) return Icons.public_rounded;
     if (lower.contains('terminal')) return Icons.terminal_rounded;
+    if (lower.contains('spotify')) return Icons.music_note_rounded;
     if (lower.contains('docker')) return Icons.view_in_ar_rounded;
     return Icons.folder_open_rounded;
   }
@@ -166,6 +170,7 @@ class _IntegrationsScreenState extends State<IntegrationsScreen> with WidgetsBin
     final lower = appName.toLowerCase();
     if (lower.contains('brave') || lower.contains('chrome') || lower.contains('firefox')) return "OPEN WEBSITES & PAGES TODAY";
     if (lower.contains('terminal')) return "TERMINAL SESSIONS TODAY";
+    if (lower.contains('spotify')) return "TRACKS & PLAYLISTS TODAY";
     if (lower.contains('docker')) return "CONTAINERS & SERVICES TODAY";
     return "PROJECTS & WINDOW ACTIVITIES TODAY";
   }

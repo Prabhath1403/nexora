@@ -28,8 +28,9 @@ WORK_APPS = {
     "emacs", "vim", "neovim", "nvim",
     "android-studio",
     "zed",
-    # Terminals
+    # Terminals (Ubuntu GNOME Wayland uses org.gnome.Terminal)
     "gnome-terminal", "gnome-terminal-server", "gnome-terminal.real",
+    "org.gnome.terminal", "org.gnome.terminal.desktop", "terminal",
     "kitty", "alacritty", "terminator", "tilix",
     "wezterm", "foot", "xterm", "konsole",
     "tmux", "bash", "zsh",
@@ -48,15 +49,20 @@ LEARNING_APPS = {
     "evince", "okular", "zathura",
 }
 
+MEDIA_APPS = {
+    "spotify", "rhythmbox", "audacity",
+}
+
 IDLE_APPS = {
     "vlc", "mpv", "totem", "celluloid",
-    "spotify", "rhythmbox", "audacity",
     "nautilus", "thunar", "nemo", "dolphin",
     "eog", "gthumb", "shotwell",
     "cheese", "gnome-calculator",
 }
 
 LEARNING_KEYWORDS = [
+    "claude", "claude.ai", "chatgpt", "chat.openai.com",
+    "gemini", "gemini.google.com", "perplexity", "anthropic",
     "stackoverflow", "stack overflow",
     "developer.mozilla.org", "mdn web docs",
     "docs.python.org", "doc.rust-lang.org",
@@ -74,6 +80,8 @@ LEARNING_KEYWORDS = [
 ]
 
 WORK_KEYWORDS = [
+    "claude", "claude.ai", "chatgpt", "chat.openai.com",
+    "gemini", "gemini.google.com", "perplexity", "anthropic",
     "github.com", "gitlab.com", "bitbucket.org",
     "pull request", "merge request",
     "issue", "issues",
@@ -88,4 +96,5 @@ WORK_KEYWORDS = [
 PROJECT_KEYWORDS = [
     "nucleus", "nexora", "cyphercite", "facial-ai",
     "fraud-controller", "fruad-controller",
+    "claude", "ai-assistant",
 ]

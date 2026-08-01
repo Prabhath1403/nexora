@@ -193,7 +193,7 @@ async def app_breakdown(db: AsyncSession = Depends(get_db)):
             func.count(ActivityPing.id).label("ping_count"),
         )
         .where(ActivityPing.timestamp >= today_start)
-        .where(ActivityPing.category.in_(["work", "learning", "browsing"]))
+        .where(ActivityPing.category.in_(["work", "learning", "browsing", "media"]))
         .group_by(ActivityPing.app_name, ActivityPing.category)
         .order_by(func.sum(ActivityPing.duration_seconds).desc())
     )
@@ -269,7 +269,7 @@ async def activity_timeline(db: AsyncSession = Depends(get_db)):
     result = await db.execute(
         select(ActivityPing)
         .where(ActivityPing.timestamp >= today_start)
-        .where(ActivityPing.category.in_(["work", "learning", "browsing"]))
+        .where(ActivityPing.category.in_(["work", "learning", "browsing", "media"]))
         .order_by(ActivityPing.timestamp.asc())
     )
     pings = result.scalars().all()
