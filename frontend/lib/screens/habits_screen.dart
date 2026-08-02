@@ -42,18 +42,22 @@ class _HabitsScreenState extends State<HabitsScreen> {
     final targetValueController = TextEditingController(text: "3.0");
     String targetType = "work_hours"; // manual, work_hours, learning_hours
 
-    showCupertinoModalPopup(
+    showModalBottomSheet(
       context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setModalState) => Container(
-          padding: EdgeInsets.only(
-            top: 20, left: 20, right: 20,
-            bottom: MediaQuery.of(context).viewInsets.bottom + 20,
-          ),
-          decoration: const BoxDecoration(
-            color: AppTheme.secondaryBg,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-          ),
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Material(
+        color: Colors.transparent,
+        child: StatefulBuilder(
+          builder: (context, setModalState) => Container(
+            padding: EdgeInsets.only(
+              top: 20, left: 20, right: 20,
+              bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+            ),
+            decoration: const BoxDecoration(
+              color: AppTheme.secondaryBg,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+            ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -125,8 +129,9 @@ class _HabitsScreenState extends State<HabitsScreen> {
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildSegmentOption(String label, String value, String current, Function(String) onSelect) {
     final isSelected = value == current;
