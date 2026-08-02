@@ -285,4 +285,28 @@ class ApiService {
       return false;
     }
   }
+
+  static Future<Map<String, dynamic>?> fetchWeeklyHabitGrid() async {
+    try {
+      final response = await http.get(Uri.parse('$baseUrl/habits/weekly-grid'));
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      }
+    } catch (e) {
+      print("Error fetching weekly habit grid: $e");
+    }
+    return null;
+  }
+
+  static Future<bool> toggleHabitDate(String habitId, String dateStr) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/habits/$habitId/toggle-date?date_str=$dateStr'),
+      );
+      return response.statusCode == 200;
+    } catch (e) {
+      print("Error toggling habit date: $e");
+      return false;
+    }
+  }
 }

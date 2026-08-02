@@ -23,6 +23,8 @@ class Habit(Base):
     category: Mapped[str] = mapped_column(String(50), default="General")  # Health, Productivity, Mindset
     frequency: Mapped[str] = mapped_column(String(50), default="daily")  # daily, weekly, custom
     target_count: Mapped[int] = mapped_column(Integer, default=1)
+    target_type: Mapped[str] = mapped_column(String(50), default="manual")  # manual, work_hours, learning_hours
+    target_value: Mapped[float] = mapped_column(Float, default=1.0)         # e.g., 3.0 for 3h work, 2.0 for 2h learn
     color_hex: Mapped[str] = mapped_column(String(10), default="#6366F1")
     icon_name: Mapped[str] = mapped_column(String(50), default="check_circle")
     is_archived: Mapped[bool] = mapped_column(Boolean, default=False)
@@ -36,7 +38,9 @@ class HabitLog(Base):
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     habit_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("habits.id"))
     completed_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    log_date: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)  # Date for the daily grid check
     count: Mapped[int] = mapped_column(Integer, default=1)
+    auto_checked: Mapped[bool] = mapped_column(Boolean, default=False)          # Automatically checked by daemon
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     habit: Mapped["Habit"] = relationship("Habit", back_populates="logs")
