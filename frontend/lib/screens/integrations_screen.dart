@@ -762,9 +762,51 @@ class _IntegrationsScreenState extends State<IntegrationsScreen> with WidgetsBin
                       Text("Integrations", style: TextStyle(fontSize: 34, fontWeight: FontWeight.w700, letterSpacing: -0.5)),
                     ],
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.refresh_rounded, color: AppTheme.accent),
-                    onPressed: _fetchStatus,
+                  Row(
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.cleaning_services_rounded, color: AppTheme.accentOrange),
+                        tooltip: "Clear Telemetry Cache",
+                        onPressed: () {
+                          showCupertinoDialog(
+                            context: context,
+                            builder: (context) => CupertinoAlertDialog(
+                              title: const Text("Clear Telemetry Cache?"),
+                              content: const Text("This will wipe old activity logs so your integrations telemetry starts completely fresh."),
+                              actions: [
+                                CupertinoDialogAction(
+                                  child: const Text("Cancel"),
+                                  onPressed: () => Navigator.pop(context),
+                                ),
+                                CupertinoDialogAction(
+                                  isDestructiveAction: true,
+                                  child: const Text("Clear All"),
+                                  onPressed: () async {
+                                    Navigator.pop(context);
+                                    await ApiService.clearActivityLogs();
+                                    _fetchStatus();
+                                    if (context.mounted) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(
+                                          content: const Text("✓ Telemetry logs cleared!"),
+                                          backgroundColor: AppTheme.accentGreen,
+                                          behavior: SnackBarBehavior.floating,
+                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                        ),
+                                      );
+                                    }
+                                  },
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.refresh_rounded, color: AppTheme.accent),
+                        onPressed: _fetchStatus,
+                      ),
+                    ],
                   ),
                 ],
               ),

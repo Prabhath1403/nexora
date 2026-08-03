@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from sqlalchemy import func, case, distinct
+from sqlalchemy import func, case, distinct, delete
 from pydantic import BaseModel
 
 from app.db.session import get_db
@@ -45,6 +45,18 @@ async def receive_ping(data: PingData, db: AsyncSession = Depends(get_db)):
     db.add(ping)
     await db.commit()
     return {"status": "ok", "category": data.category}
+
+
+@router.post("/clear-logs")
+@router.delete("/clear-logs")
+async def clear_activity_logs(db: AsyncSession = Depends(get_db)):
+    """
+    Clears all old activity pings / telemetry cache from database
+    so the integrations tab and app breakdown start completely fresh!
+    """
+    await db.execute(delete(ActivityPing))
+    await db.commit()
+    return {"status": "ok", "message": "All activity telemetry logs cleared."}
 
 
 @router.get("/summary")

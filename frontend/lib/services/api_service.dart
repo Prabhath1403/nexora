@@ -412,4 +412,14 @@ class ApiService {
       return false;
     }
   }
+
+  static Future<bool> clearActivityLogs() async {
+    try {
+      final response = await http.post(Uri.parse('$baseUrl/tracker/clear-logs'));
+      return response.statusCode == 200;
+    } catch (e) {
+      print("Error clearing activity logs: $e");
+      return false;
+    }
+  }
 }
