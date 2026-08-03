@@ -269,6 +269,109 @@ class ApiService {
     }
   }
 
+  static Future<bool> updateTaskStatus(String taskId, String status) async {
+    try {
+      final response = await http.patch(
+        Uri.parse('$baseUrl/projects/tasks/$taskId'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({'status': status}),
+      );
+      return response.statusCode == 200;
+    } catch (e) {
+      print("Error updating task status: $e");
+      return false;
+    }
+  }
+
+  static Future<List<dynamic>> fetchLearningResources() async {
+    try {
+      final response = await http.get(Uri.parse('$baseUrl/learning/'));
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      }
+    } catch (e) {
+      print("Error fetching learning resources: $e");
+    }
+    return [];
+  }
+
+  static Future<bool> createLearningResource(Map<String, dynamic> data) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/learning/'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode(data),
+      );
+      return response.statusCode == 200 || response.statusCode == 201;
+    } catch (e) {
+      print("Error creating learning resource: $e");
+      return false;
+    }
+  }
+
+  static Future<bool> updateLearningResourceProgress(String resourceId, double progress) async {
+    try {
+      final response = await http.patch(
+        Uri.parse('$baseUrl/learning/$resourceId'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({'progress_percentage': progress}),
+      );
+      return response.statusCode == 200;
+    } catch (e) {
+      print("Error updating learning resource progress: $e");
+      return false;
+    }
+  }
+
+  static Future<List<dynamic>> fetchWorkLogs() async {
+    try {
+      final response = await http.get(Uri.parse('$baseUrl/work-hours/'));
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      }
+    } catch (e) {
+      print("Error fetching work logs: $e");
+    }
+    return [];
+  }
+
+  static Future<Map<String, dynamic>?> startClock([String? projectId, String? taskId, String? description]) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/work-hours/start'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({
+          'project_id': projectId,
+          'task_id': taskId,
+          'description': description,
+        }),
+      );
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return json.decode(response.body);
+      }
+    } catch (e) {
+      print("Error starting clock: $e");
+    }
+    return null;
+  }
+
+  static Future<bool> stopClock(String logId, String? description) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/work-hours/stop'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({
+          'log_id': logId,
+          'description': description,
+        }),
+      );
+      return response.statusCode == 200;
+    } catch (e) {
+      print("Error stopping clock: $e");
+      return false;
+    }
+  }
+
   static Future<bool> recordFocusSession(int durationMinutes, String type) async {
     try {
       final response = await http.post(
