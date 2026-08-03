@@ -42,8 +42,8 @@ def classify_activity(wm_class: str, title: str, idle_ms: int) -> str:
     if wm_lower in LEARNING_APPS or any(app in wm_lower for app in LEARNING_APPS):
         return "learning"
 
-    # Browser classification (Chrome, Firefox, Brave)
-    if any(b in wm_lower for b in ("chrome", "chromium", "firefox", "brave", "edge", "opera", "vivaldi")):
+    # Browser classification (Brave, Chrome, Firefox)
+    if any(b in wm_lower for b in ("brave", "chrome", "chromium", "firefox", "edge", "opera", "vivaldi")):
         for kw in LEARNING_KEYWORDS:
             if kw in title_lower:
                 return "learning"
@@ -169,11 +169,13 @@ def humanize_app_name(wm_class: str, title: str) -> str:
         "spotify": "Spotify",
         "kitty": "Kitty",
         "alacritty": "Alacritty",
-        "google-chrome": "Chrome",
-        "chromium": "Chromium",
-        "firefox": "Firefox",
         "brave": "Brave",
         "brave-browser": "Brave",
+        "brave.com": "Brave",
+        "google-chrome": "Chrome",
+        "chrome": "Chrome",
+        "chromium": "Chromium",
+        "firefox": "Firefox",
         "docker-desktop": "Docker",
         "docker": "Docker",
         "slack": "Slack",

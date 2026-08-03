@@ -103,9 +103,11 @@ def get_focused_window_process_fallback() -> Optional[Dict[str, Any]]:
             ("kitty", "Kitty", "work"),
             ("alacritty", "Alacritty", "work"),
             ("docker", "Docker", "work"),
+            ("brave-browser", "Brave", "browsing"),
+            ("brave", "Brave", "browsing"),
+            ("google-chrome", "Chrome", "browsing"),
             ("chrome", "Chrome", "browsing"),
             ("firefox", "Firefox", "browsing"),
-            ("brave", "Brave", "browsing"),
         ]
 
         candidates = []
@@ -146,6 +148,13 @@ def get_focused_window_process_fallback() -> Optional[Dict[str, Any]]:
                     stat_file = f"/proc/{pid}/stat"
                     mtime = os.path.getmtime(stat_file) if os.path.exists(stat_file) else 0.0
                     candidates.append((mtime, "Docker", "Docker Container Engine — Development", pid))
+                    continue
+
+                # EXPLICIT BRAVE BROWSER FIX: Match Brave browser before Chrome
+                if any(b in cmd_lower for b in ["brave-browser", "brave.com", "/brave"]):
+                    stat_file = f"/proc/{pid}/stat"
+                    mtime = os.path.getmtime(stat_file) if os.path.exists(stat_file) else 0.0
+                    candidates.append((mtime, "Brave", "Brave — Web Browsing & Research", pid))
                     continue
 
                 # EXPLICIT TERMINAL FIX: Check for gnome-terminal-server, bash, or zsh
