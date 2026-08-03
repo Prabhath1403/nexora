@@ -4,6 +4,9 @@
  * Exposes the currently focused window's title, WM_CLASS, and PID
  * via a DBus interface that the Nucleus Activity Daemon can query.
  * 
+ * Also exposes GetBrowserWindows to list all open browser windows
+ * so tab titles can be captured even when the browser isn't focused.
+ * 
  * Works on GNOME 45/46/47 with Wayland.
  */
 
@@ -17,8 +20,17 @@ const DBUS_IFACE = `
     <method name="GetFocusedWindow">
       <arg type="s" direction="out" name="result"/>
     </method>
+    <method name="GetBrowserWindows">
+      <arg type="s" direction="out" name="result"/>
+    </method>
   </interface>
 </node>`;
+
+const BROWSER_WM_CLASSES = [
+    'brave-browser', 'brave', 'google-chrome', 'chromium',
+    'chromium-browser', 'firefox', 'firefox-esr',
+    'microsoft-edge', 'opera', 'vivaldi',
+];
 
 export default class NucleusWindowTracker extends Extension {
     _dbus = null;
@@ -66,5 +78,52 @@ export default class NucleusWindowTracker extends Extension {
             // Silently fail — return empty
         }
         return JSON.stringify({ title: '', wmClass: '', pid: 0 });
+    }
+
+    /**
+     * Returns JSON array of all open browser windows with their titles.
+     * Used by the daemon to capture open browser tabs even when the
+     * browser is not the focused window.
+     * 
+     * Example output:
+     * [
+     *   {"title": "GitHub - Brave", "wmClass": "brave-browser", "pid": 1234},
+     *   {"title": "YouTube - Brave", "wmClass": "brave-browser", "pid": 1234}
+     * ]
+     */
+    GetBrowserWindows() {
+        try {
+            const windows = global.get_window_actors();
+            const results = [];
+
+            for (const actor of windows) {
+                const win = actor.get_meta_window();
+                if (!win) continue;
+
+                const wmClass = (win.get_wm_class() || '').toLowerCase();
+                const title = win.get_title() || '';
+                const pid = win.get_pid() || 0;
+
+                if (!title || !wmClass) continue;
+
+                // Check if this is a browser window
+                const isBrowser = BROWSER_WM_CLASSES.some(
+                    cls => wmClass === cls || wmClass.includes(cls)
+                );
+
+                if (isBrowser) {
+                    results.push({
+                        title: title,
+                        wmClass: win.get_wm_class() || '',
+                        pid: pid,
+                    });
+                }
+            }
+
+            return JSON.stringify(results);
+        } catch (e) {
+            // Silently fail
+        }
+        return JSON.stringify([]);
     }
 }

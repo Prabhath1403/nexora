@@ -7,7 +7,41 @@ import os
 import glob
 import json
 import subprocess
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
+
+
+def get_browser_windows_gnome_ext() -> List[Dict[str, Any]]:
+    """
+    Query the GNOME Shell Extension for ALL open browser windows.
+    Returns a list of browser window dicts with title, wmClass, pid.
+    Works even when the browser is not the focused window.
+    """
+    try:
+        result = subprocess.check_output(
+            [
+                "gdbus", "call", "--session",
+                "--dest", "org.nucleus.WindowTracker",
+                "--object-path", "/org/nucleus/WindowTracker",
+                "--method", "org.nucleus.WindowTracker.GetBrowserWindows",
+            ],
+            stderr=subprocess.DEVNULL,
+            timeout=3,
+        ).decode("utf-8").strip()
+
+        # Parse gdbus output: ('["json"]',)
+        if result.startswith("('") and result.endswith("',)"):
+            json_str = result[2:-3]
+        elif result.startswith('("') and result.endswith('",)'):
+            json_str = result[2:-3]
+        else:
+            json_str = result.strip("() ',")
+
+        data = json.loads(json_str)
+        if isinstance(data, list):
+            return data
+    except Exception:
+        pass
+    return []
 
 def get_focused_window_gnome_ext() -> Optional[Dict[str, Any]]:
     """Query the Nucleus GNOME Shell Extension via DBus for focused window info."""
