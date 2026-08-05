@@ -136,14 +136,15 @@ async def get_summary(db: AsyncSession = Depends(get_db)):
     # Last 5 pings (for recent activity preview)
     last_five = recent_pings[:5]
 
+    total_work_seconds = work_seconds + browse_seconds
     return {
-        "work_hours_today": round(work_seconds / 3600, 1),
-        "work_seconds_today": work_seconds,
-        "learning_hours_today": round(learn_seconds / 3600, 1),
+        "work_hours_today": round(total_work_seconds / 3600, 2),
+        "work_seconds_today": total_work_seconds,
+        "learning_hours_today": round(learn_seconds / 3600, 2),
         "learning_seconds_today": learn_seconds,
-        "browsing_hours_today": round(browse_seconds / 3600, 1),
+        "browsing_hours_today": round(browse_seconds / 3600, 2),
         "browsing_seconds_today": browse_seconds,
-        "total_hours_today": round((work_seconds + learn_seconds) / 3600, 1),
+        "total_hours_today": round((total_work_seconds + learn_seconds) / 3600, 2),
         "top_app": top_app,
         "top_app_hours": top_app_hours,
         "active_since": active_since,

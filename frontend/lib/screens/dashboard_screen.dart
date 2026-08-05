@@ -683,8 +683,17 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                       ],
                     ),
                   ),
-                  Text(formatHoursToReadableTime(workHoursToday),
-                      style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700, color: AppTheme.accent)),
+                  Builder(
+                    builder: (context) {
+                      double modalTotalH = 0.0;
+                      for (final item in appBreakdown) {
+                        modalTotalH += (item['hours'] ?? 0.0).toDouble();
+                      }
+                      final displayH = modalTotalH > 0 ? modalTotalH : workHoursToday;
+                      return Text(formatHoursToReadableTime(displayH),
+                          style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700, color: AppTheme.accent));
+                    },
+                  ),
                 ],
               ),
               const SizedBox(height: 24),
