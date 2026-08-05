@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import '../services/api_service.dart';
 import '../theme/app_theme.dart';
+import '../utils/time_formatter.dart';
 
 class WorkHoursScreen extends StatefulWidget {
   const WorkHoursScreen({super.key});
@@ -165,7 +166,7 @@ class _WorkHoursScreenState extends State<WorkHoursScreen> {
                           ],
                         ),
                       ),
-                      Text("${totalHours.toStringAsFixed(1)}h",
+                      Text(formatHoursToReadableTime(totalHours),
                           style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: _getAppColor(appName))),
                     ],
                   ),
@@ -364,7 +365,7 @@ class _WorkHoursScreenState extends State<WorkHoursScreen> {
               children: [
                 const Text("TODAY'S LAPTOP APP BREAKDOWN",
                     style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.secondaryLabel, letterSpacing: 0.5)),
-                Text("${totalWorkHours.toStringAsFixed(1)}h Total",
+                Text("${formatHoursToReadableTime(totalWorkHours)} Total",
                     style: const TextStyle(fontSize: 12, color: AppTheme.accent, fontWeight: FontWeight.w700)),
               ],
             ),
@@ -437,7 +438,7 @@ class _WorkHoursScreenState extends State<WorkHoursScreen> {
                                           ],
                                         ),
                                       ),
-                                      Text("${hours.toStringAsFixed(1)}h",
+                                      Text(formatHoursToReadableTime(hours),
                                           style: TextStyle(color: color, fontSize: 16, fontWeight: FontWeight.w700)),
                                     ],
                                   ),

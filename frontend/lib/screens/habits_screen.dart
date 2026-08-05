@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import '../services/api_service.dart';
 import '../theme/app_theme.dart';
+import '../utils/time_formatter.dart';
 
 class HabitsScreen extends StatefulWidget {
   const HabitsScreen({super.key});
@@ -462,7 +463,7 @@ class _HabitsScreenState extends State<HabitsScreen> {
                           )
                         : (progress > 0
                             ? Text(
-                                "${progress.toStringAsFixed(1)}h",
+                                formatHoursToReadableTime(progress),
                                 style: const TextStyle(fontSize: 10, color: AppTheme.secondaryLabel, fontWeight: FontWeight.w600),
                               )
                             : const SizedBox.shrink()),

@@ -3,6 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../services/api_service.dart';
 import '../theme/app_theme.dart';
+import '../utils/time_formatter.dart';
 
 class IntegrationsScreen extends StatefulWidget {
   const IntegrationsScreen({super.key});
@@ -227,7 +228,7 @@ class _IntegrationsScreenState extends State<IntegrationsScreen> with WidgetsBin
                           ],
                         ),
                       ),
-                      Text("${totalHours.toStringAsFixed(1)}h",
+                      Text(formatHoursToReadableTime(totalHours),
                           style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: _iconColorForApp(appName))),
                     ],
                   ),
@@ -714,7 +715,7 @@ class _IntegrationsScreenState extends State<IntegrationsScreen> with WidgetsBin
                             ],
                           ),
                           subtitle: Text(item['category'] ?? 'Work', style: const TextStyle(fontSize: 11, color: AppTheme.secondaryLabel)),
-                          trailing: Text("${hours.toStringAsFixed(1)}h", style: const TextStyle(fontWeight: FontWeight.w700, color: AppTheme.accent, fontSize: 14)),
+                          trailing: Text(formatHoursToReadableTime(hours), style: const TextStyle(fontWeight: FontWeight.w700, color: AppTheme.accent, fontSize: 14)),
                         ),
                       );
                     }),
@@ -866,7 +867,7 @@ class _IntegrationsScreenState extends State<IntegrationsScreen> with WidgetsBin
                                 Padding(
                                   padding: const EdgeInsets.only(top: 2),
                                   child: Text(
-                                    "Today: ${daemonWorkHours.toStringAsFixed(1)}h Work, ${daemonLearningHours.toStringAsFixed(1)}h Learning",
+                                    "Today: ${formatHoursToReadableTime(daemonWorkHours)} Work, ${formatHoursToReadableTime(daemonLearningHours)} Learning",
                                     style: const TextStyle(fontSize: 11, color: AppTheme.secondaryLabel),
                                   ),
                                 ),

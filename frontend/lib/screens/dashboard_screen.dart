@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import '../services/api_service.dart';
 import '../theme/app_theme.dart';
+import '../utils/time_formatter.dart';
+import 'work_hours_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   final Function(int) onNavigate;
@@ -335,8 +337,8 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                     Expanded(
                       child: _buildAutoHoursCard(
                         title: "Work Hours",
-                        value: "${workHoursToday.toStringAsFixed(1)}h",
-                        subtitle: topApp != null ? "$topApp · ${topAppHours.toStringAsFixed(1)}h" : "Start the daemon",
+                        value: formatHoursToReadableTime(workHoursToday),
+                        subtitle: topApp != null ? "$topApp · ${formatHoursToReadableTime(topAppHours)}" : "Start the daemon",
                         color: AppTheme.accent,
                         icon: Icons.laptop_mac_rounded,
                         progress: workHoursToday > 0 ? (workHoursToday / 8.0).clamp(0.0, 1.0) : 0.0,
@@ -348,7 +350,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                     Expanded(
                       child: _buildAutoHoursCard(
                         title: "Learning Hours",
-                        value: "${learningHoursToday.toStringAsFixed(1)}h",
+                        value: formatHoursToReadableTime(learningHoursToday),
                         subtitle: currentSessionMinutes > 0 ? "Session: ${currentSessionMinutes}m" : "Browse docs & tutorials",
                         color: AppTheme.accentPurple,
                         icon: Icons.menu_book_rounded,
@@ -681,7 +683,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                       ],
                     ),
                   ),
-                  Text("${workHoursToday.toStringAsFixed(1)}h",
+                  Text(formatHoursToReadableTime(workHoursToday),
                       style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700, color: AppTheme.accent)),
                 ],
               ),
@@ -706,7 +708,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                         const Icon(Icons.stars_rounded, color: AppTheme.accentPurple, size: 20),
                         const SizedBox(width: 8),
                         Text(
-                          topApp != null ? "Top Focus: $topApp (${topAppHours.toStringAsFixed(1)}h)" : "No activity logged yet",
+                          topApp != null ? "Top Focus: $topApp (${formatHoursToReadableTime(topAppHours)})" : "No activity logged yet",
                           style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
                         ),
                       ],
@@ -772,7 +774,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                                   ),
                                 ),
                                 const SizedBox(width: 14),
-                                Text("${hours.toStringAsFixed(1)}h",
+                                Text(formatHoursToReadableTime(hours),
                                     style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.accent)),
                               ],
                             ),
@@ -809,7 +811,10 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       onPressed: () {
                         Navigator.pop(context);
-                        widget.onNavigate(2); // Go to Work Hours full tab
+                        Navigator.push(
+                          context,
+                          CupertinoPageRoute(builder: (context) => const WorkHoursScreen()),
+                        );
                       },
                       child: const Text("Full Timelogs", style: TextStyle(fontWeight: FontWeight.w600, color: Colors.white)),
                     ),
