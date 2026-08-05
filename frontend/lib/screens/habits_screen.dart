@@ -409,48 +409,64 @@ class _HabitsScreenState extends State<HabitsScreen> {
             final completed = cell['completed'] == true;
             final autoChecked = cell['auto_checked'] == true;
             final isToday = cell['is_today'] == true;
+            final isFuture = cell['is_future'] == true;
             final progress = (cell['progress'] ?? 0.0).toDouble();
 
             return GestureDetector(
               onTap: () async {
+                if (isFuture) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: const Text("Future dates cannot be checked off yet!"),
+                      backgroundColor: AppTheme.secondaryBg,
+                      behavior: SnackBarBehavior.floating,
+                      duration: const Duration(seconds: 2),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    ),
+                  );
+                  return;
+                }
                 await ApiService.toggleHabitDate(habit['id'], dateStr);
                 _loadGrid();
               },
-              child: Container(
-                width: 48, height: 38,
-                margin: const EdgeInsets.symmetric(horizontal: 2),
-                decoration: BoxDecoration(
-                  color: completed
-                      ? (autoChecked ? AppTheme.accentGreen.withValues(alpha: 0.2) : color.withValues(alpha: 0.18))
-                      : (isToday ? AppTheme.tertiaryBg : AppTheme.background.withValues(alpha: 0.5)),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
+              child: Opacity(
+                opacity: isFuture ? 0.4 : 1.0,
+                child: Container(
+                  width: 48, height: 38,
+                  margin: const EdgeInsets.symmetric(horizontal: 2),
+                  decoration: BoxDecoration(
                     color: completed
-                        ? (autoChecked ? AppTheme.accentGreen : color.withValues(alpha: 0.6))
-                        : (isToday ? AppTheme.accent.withValues(alpha: 0.4) : AppTheme.tertiaryBg),
-                    width: isToday ? 1.5 : 1.0,
+                        ? (autoChecked ? AppTheme.accentGreen.withValues(alpha: 0.2) : color.withValues(alpha: 0.18))
+                        : (isToday ? AppTheme.tertiaryBg : AppTheme.background.withValues(alpha: 0.5)),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: completed
+                          ? (autoChecked ? AppTheme.accentGreen : color.withValues(alpha: 0.6))
+                          : (isToday ? AppTheme.accent.withValues(alpha: 0.4) : AppTheme.tertiaryBg),
+                      width: isToday ? 1.5 : 1.0,
+                    ),
                   ),
-                ),
-                child: Center(
-                  child: completed
-                      ? Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.check_circle_rounded,
-                              color: autoChecked ? AppTheme.accentGreen : color,
-                              size: 18,
-                            ),
-                            if (autoChecked)
-                              const Text("AUTO", style: TextStyle(fontSize: 8, fontWeight: FontWeight.w800, color: AppTheme.accentGreen)),
-                          ],
-                        )
-                      : (progress > 0
-                          ? Text(
-                              "${progress.toStringAsFixed(1)}h",
-                              style: const TextStyle(fontSize: 10, color: AppTheme.secondaryLabel, fontWeight: FontWeight.w600),
-                            )
-                          : const SizedBox.shrink()),
+                  child: Center(
+                    child: completed
+                        ? Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.check_circle_rounded,
+                                color: autoChecked ? AppTheme.accentGreen : color,
+                                size: 18,
+                              ),
+                              if (autoChecked)
+                                const Text("AUTO", style: TextStyle(fontSize: 8, fontWeight: FontWeight.w800, color: AppTheme.accentGreen)),
+                            ],
+                          )
+                        : (progress > 0
+                            ? Text(
+                                "${progress.toStringAsFixed(1)}h",
+                                style: const TextStyle(fontSize: 10, color: AppTheme.secondaryLabel, fontWeight: FontWeight.w600),
+                              )
+                            : const SizedBox.shrink()),
+                  ),
                 ),
               ),
             );

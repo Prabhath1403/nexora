@@ -158,17 +158,18 @@ async def get_weekly_grid(db: AsyncSession = Depends(get_db)):
             auto_checked = log.auto_checked if log else False
             progress = 0.0
 
-            # Evaluate auto-tracking criteria for work/learning habits
-            if habit.target_type == "work_hours":
-                progress = week_telemetry[d]["work_hours"]
-                if progress >= habit.target_value:
-                    is_completed = True
-                    auto_checked = True
-            elif habit.target_type == "learning_hours":
-                progress = week_telemetry[d]["learning_hours"]
-                if progress >= habit.target_value:
-                    is_completed = True
-                    auto_checked = True
+            # Evaluate auto-tracking criteria ONLY for past or current days (never future days)
+            if d <= today_date:
+                if habit.target_type == "work_hours":
+                    progress = week_telemetry[d]["work_hours"]
+                    if progress >= habit.target_value:
+                        is_completed = True
+                        auto_checked = True
+                elif habit.target_type == "learning_hours":
+                    progress = week_telemetry[d]["learning_hours"]
+                    if progress >= habit.target_value:
+                        is_completed = True
+                        auto_checked = True
 
             weekly_cells.append({
                 "date": d.isoformat(),
@@ -177,6 +178,7 @@ async def get_weekly_grid(db: AsyncSession = Depends(get_db)):
                 "progress": progress,
                 "target_value": habit.target_value,
                 "is_today": d == today_date,
+                "is_future": d > today_date,
             })
 
         grid_habits.append({
@@ -229,6 +231,10 @@ async def toggle_habit_date(habit_id: UUID, date_str: str, db: AsyncSession = De
         target_date = datetime.strptime(date_str, "%Y-%m-%d").date()
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid date format. Use YYYY-MM-DD")
+
+    today_date = datetime.utcnow().date()
+    if target_date > today_date:
+        raise HTTPException(status_code=400, detail="Future dates cannot be checked off yet")
 
     target_dt = datetime(target_date.year, target_date.month, target_date.day, 12, 0, 0)
     d_start = datetime(target_date.year, target_date.month, target_date.day, 0, 0, 0)
