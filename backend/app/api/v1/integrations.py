@@ -295,6 +295,57 @@ async def github_activity(db: AsyncSession = Depends(get_db)):
     }
 
 
+@router.post("/github/import-issues")
+async def import_github_issues(db: AsyncSession = Depends(get_db)):
+    """Fetch open GitHub issues and import them as Nucleus Tasks."""
+    result = await db.execute(select(IntegrationToken).where(IntegrationToken.service_name == "github"))
+    token = result.scalar_one_or_none()
+    if not token:
+        raise HTTPException(status_code=401, detail="GitHub not connected")
+
+    from app.db.models import Task, Project
+
+    imported_count = 0
+    async with httpx.AsyncClient() as client:
+        headers = {"Authorization": f"Bearer {token.access_token}", "Accept": "application/json"}
+        resp = await client.get("https://api.github.com/user/issues?filter=all&state=open", headers=headers)
+        
+        if resp.status_code == 200:
+            issues = resp.json()
+            for issue in issues:
+                if "pull_request" in issue:
+                    continue  # Skip pull requests
+                
+                issue_num = issue.get("number")
+                title = issue.get("title", "")
+                repo_name = issue.get("repository", {}).get("name", "GitHub")
+                body = issue.get("body", "") or f"Imported from {repo_name} issue #{issue_num}"
+
+                # Check if task already exists
+                existing = await db.execute(select(Task).where(Task.github_issue_number == issue_num))
+                if existing.scalar_one_or_none():
+                    continue
+
+                # Match project by repo name if exists
+                p_res = await db.execute(select(Project).where(func.lower(Project.name).contains(repo_name.lower())))
+                project = p_res.scalars().first()
+
+                new_task = Task(
+                    title=f"[{repo_name}] {title}",
+                    description=body[:500],
+                    priority="high" if any(l.get("name", "").lower() in ("bug", "urgent") for l in issue.get("labels", [])) else "medium",
+                    status="todo",
+                    github_issue_number=issue_num,
+                    project_id=project.id if project else None,
+                )
+                db.add(new_task)
+                imported_count += 1
+
+            await db.commit()
+
+    return {"status": "ok", "imported_tasks": imported_count}
+
+
 # ==========================================
 # GOOGLE OAUTH2 (Calendar + Gmail)
 # ==========================================

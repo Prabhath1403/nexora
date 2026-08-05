@@ -108,7 +108,24 @@ async def list_projects(db: AsyncSession = Depends(get_db)):
         result = await db.execute(select(Project).options(selectinload(Project.tasks)))
         projects = result.scalars().all()
 
-    return projects
+    formatted = []
+    for p in projects:
+        total = len(p.tasks)
+        completed = sum(1 for t in p.tasks if t.status == "done")
+        progress = round(completed / total, 2) if total > 0 else 0.0
+        formatted.append({
+            "id": str(p.id),
+            "name": p.name,
+            "description": p.description,
+            "github_repo": p.github_repo,
+            "color_hex": p.color_hex,
+            "status": p.status,
+            "total_tasks": total,
+            "completed_tasks": completed,
+            "progress": progress,
+            "created_at": p.created_at.isoformat() if p.created_at else None,
+        })
+    return formatted
 
 
 @router.post("/")
@@ -118,6 +135,17 @@ async def create_project(data: ProjectCreate, db: AsyncSession = Depends(get_db)
     await db.commit()
     await db.refresh(project)
     return project
+
+
+@router.delete("/{project_id}")
+async def delete_project(project_id: UUID, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(Project).where(Project.id == project_id))
+    project = result.scalar_one_or_none()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    await db.delete(project)
+    await db.commit()
+    return {"status": "deleted", "project_id": str(project_id)}
 
 
 @router.get("/tasks")
@@ -157,3 +185,15 @@ async def update_task(task_id: UUID, data: TaskUpdate, db: AsyncSession = Depend
     await db.commit()
     await db.refresh(task)
     return task
+
+
+@router.delete("/tasks/{task_id}")
+async def delete_task(task_id: UUID, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(Task).where(Task.id == task_id))
+    task = result.scalar_one_or_none()
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    await db.delete(task)
+    await db.commit()
+    return {"status": "deleted", "task_id": str(task_id)}
+

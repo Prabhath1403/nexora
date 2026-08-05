@@ -190,9 +190,30 @@ async def get_weekly_grid(db: AsyncSession = Depends(get_db)):
             "weekly_cells": weekly_cells,
         })
 
+    # Calculate daily completion ratios for past 7 days (trend)
+    weekly_trend = []
+    for day_idx in range(7):
+        completed_on_day = sum(
+            1 for gh in grid_habits if gh["weekly_cells"][day_idx]["completed"]
+        )
+        total_habits = len(grid_habits) if grid_habits else 1
+        weekly_trend.append(round(completed_on_day / total_habits, 2))
+
+    # Calculate streak (consecutive days with at least 1 completed habit up to today)
+    streak_count = 0
+    today_idx = next((i for i, h in enumerate(day_headers) if h["is_today"]), 6)
+    for day_idx in range(today_idx, -1, -1):
+        any_completed = any(gh["weekly_cells"][day_idx]["completed"] for gh in grid_habits)
+        if any_completed:
+            streak_count += 1
+        else:
+            break
+
     return {
         "headers": day_headers,
         "habits": grid_habits,
+        "weekly_trend": weekly_trend,
+        "streak_count": max(streak_count, 1 if any(gh["weekly_cells"][today_idx]["completed"] for gh in grid_habits) else 0),
     }
 
 
@@ -237,3 +258,17 @@ async def toggle_habit_date(habit_id: UUID, date_str: str, db: AsyncSession = De
 
     await db.commit()
     return {"status": status, "date": date_str, "habit_id": str(habit_id)}
+
+
+@router.delete("/{habit_id}")
+async def delete_habit(habit_id: UUID, db: AsyncSession = Depends(get_db)):
+    """Soft delete / archive a habit."""
+    result = await db.execute(select(Habit).where(Habit.id == habit_id))
+    habit = result.scalar_one_or_none()
+    if not habit:
+        raise HTTPException(status_code=404, detail="Habit not found")
+
+    habit.is_archived = True
+    await db.commit()
+    return {"status": "archived", "habit_id": str(habit_id)}
+
