@@ -323,6 +323,16 @@ class ApiService {
     }
   }
 
+  static Future<bool> deleteLearningResource(String resourceId) async {
+    try {
+      final response = await http.delete(Uri.parse('$baseUrl/learning/$resourceId'));
+      return response.statusCode == 200;
+    } catch (e) {
+      print("Error deleting learning resource: $e");
+      return false;
+    }
+  }
+
   static Future<List<dynamic>> fetchWorkLogs() async {
     try {
       final response = await http.get(Uri.parse('$baseUrl/work-hours/'));

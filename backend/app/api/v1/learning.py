@@ -103,3 +103,14 @@ async def update_learning_resource(resource_id: UUID, data: LearningResourceUpda
     await db.commit()
     await db.refresh(res)
     return res
+
+@router.delete("/{resource_id}")
+async def delete_learning_resource(resource_id: UUID, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(LearningResource).where(LearningResource.id == resource_id))
+    res = result.scalar_one_or_none()
+    if not res:
+        raise HTTPException(status_code=404, detail="Resource not found")
+    await db.delete(res)
+    await db.commit()
+    return {"status": "ok", "message": "Learning resource deleted"}
+
