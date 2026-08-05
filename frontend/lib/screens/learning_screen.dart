@@ -234,7 +234,12 @@ class _LearningScreenState extends State<LearningScreen> {
                         if (url.isNotEmpty)
                           Align(
                             alignment: Alignment.centerRight,
-                            child: Text(url, style: const TextStyle(fontSize: 10, color: AppTheme.accent, decoration: TextDecoration.underline)),
+                            child: Text(
+                              url,
+                              style: const TextStyle(fontSize: 10, color: AppTheme.accent, decoration: TextDecoration.underline),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
                       ],
                     ),

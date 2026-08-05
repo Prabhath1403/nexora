@@ -741,16 +741,30 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Row(
-                            children: tags.map((t) => Container(
-                              margin: const EdgeInsets.only(right: 6),
-                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                              decoration: BoxDecoration(color: AppTheme.tertiaryBg, borderRadius: BorderRadius.circular(4)),
-                              child: Text("#$t", style: const TextStyle(fontSize: 10, color: AppTheme.secondaryLabel)),
-                            )).toList(),
+                          Expanded(
+                            child: SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              child: Row(
+                                children: tags.map((t) => Container(
+                                  margin: const EdgeInsets.only(right: 6),
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                  decoration: BoxDecoration(color: AppTheme.tertiaryBg, borderRadius: BorderRadius.circular(4)),
+                                  child: Text("#$t", style: const TextStyle(fontSize: 10, color: AppTheme.secondaryLabel)),
+                                )).toList(),
+                              ),
+                            ),
                           ),
-                          if (url.isNotEmpty)
-                            Text(url, style: const TextStyle(fontSize: 10, color: AppTheme.accent, decoration: TextDecoration.underline)),
+                          if (url.isNotEmpty) ...[
+                            const SizedBox(width: 8),
+                            Flexible(
+                              child: Text(
+                                url,
+                                style: const TextStyle(fontSize: 10, color: AppTheme.accent, decoration: TextDecoration.underline),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
                         ],
                       ),
                     ],
