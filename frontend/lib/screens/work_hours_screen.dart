@@ -233,9 +233,11 @@ class _WorkHoursScreenState extends State<WorkHoursScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return CustomScrollView(
-      physics: const BouncingScrollPhysics(),
-      slivers: [
+    return Scaffold(
+      backgroundColor: AppTheme.background,
+      body: CustomScrollView(
+        physics: const BouncingScrollPhysics(),
+        slivers: [
         // Header
         SliverToBoxAdapter(
           child: SafeArea(
@@ -571,6 +573,7 @@ class _WorkHoursScreenState extends State<WorkHoursScreen> {
 
         const SliverToBoxAdapter(child: SizedBox(height: 100)),
       ],
-    );
-  }
+    ),
+  );
+}
 }
