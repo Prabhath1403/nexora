@@ -324,15 +324,27 @@ class _WorkHoursScreenState extends State<WorkHoursScreen> {
                     ),
                   ),
                   const SizedBox(height: 16),
+                  const Text(
+                    "MANUAL SESSION TIMER",
+                    style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: AppTheme.secondaryLabel, letterSpacing: 1),
+                  ),
+                  const SizedBox(height: 6),
                   Text(
                     _formatDuration(elapsedSeconds),
                     style: TextStyle(
-                      fontSize: 52, fontWeight: FontWeight.w200, letterSpacing: 2,
+                      fontSize: 48, fontWeight: FontWeight.w200, letterSpacing: 2,
                       fontFamily: '.SF UI Display',
                       color: isClockedIn ? AppTheme.label : AppTheme.secondaryLabel,
                     ),
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 4),
+                  Text(
+                    isClockedIn
+                        ? "Recording manual session..."
+                        : "Tap ▶ to start a manual session timer",
+                    style: const TextStyle(fontSize: 12, color: AppTheme.secondaryLabel, fontWeight: FontWeight.w500),
+                  ),
+                  const SizedBox(height: 20),
                   GestureDetector(
                     onTap: _toggleClock,
                     child: Container(
@@ -360,14 +372,22 @@ class _WorkHoursScreenState extends State<WorkHoursScreen> {
         SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(20, 24, 20, 8),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text("TODAY'S LAPTOP APP BREAKDOWN",
-                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.secondaryLabel, letterSpacing: 0.5)),
-                Text("${formatHoursToReadableTime(totalWorkHours)} Total",
-                    style: const TextStyle(fontSize: 12, color: AppTheme.accent, fontWeight: FontWeight.w700)),
-              ],
+            child: Builder(
+              builder: (context) {
+                double totalBreakdownHours = 0.0;
+                for (final item in appBreakdown) {
+                  totalBreakdownHours += (item['hours'] ?? 0.0).toDouble();
+                }
+                return Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text("TODAY'S LAPTOP APP BREAKDOWN",
+                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.secondaryLabel, letterSpacing: 0.5)),
+                    Text("${formatHoursToReadableTime(totalBreakdownHours)} Total",
+                        style: const TextStyle(fontSize: 12, color: AppTheme.accent, fontWeight: FontWeight.w700)),
+                  ],
+                );
+              },
             ),
           ),
         ),
