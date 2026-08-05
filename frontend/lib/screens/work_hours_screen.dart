@@ -18,8 +18,6 @@ class _WorkHoursScreenState extends State<WorkHoursScreen> {
   int elapsedSeconds = 0;
   Timer? _timer;
   List<dynamic> logs = [];
-
-  // Live Laptop Tracker Breakdown
   List<dynamic> appBreakdown = [];
   double totalWorkHours = 0.0;
   String? topApp;
@@ -138,12 +136,11 @@ class _WorkHoursScreenState extends State<WorkHoursScreen> {
                   Center(
                     child: Container(
                       width: 40, height: 5,
-                      decoration: BoxDecoration(color: AppTheme.tertiaryBg, borderRadius: BorderRadius.circular(10)),
+                      decoration: BoxDecoration(color: AppTheme.tertiaryLabel, borderRadius: BorderRadius.circular(2.5)),
                     ),
                   ),
                   const SizedBox(height: 20),
 
-                  // Header
                   Row(
                     children: [
                       Container(
@@ -157,10 +154,9 @@ class _WorkHoursScreenState extends State<WorkHoursScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(appName, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
+                            const SizedBox(height: 2),
                             Text(
-                              appName.toLowerCase().contains('brave') || appName.toLowerCase().contains('chrome') || appName.toLowerCase().contains('firefox')
-                                ? "Web Browsing & Research"
-                                : "Development & Workspace",
+                              "${activities.length} activity sessions logged",
                               style: const TextStyle(fontSize: 12, color: AppTheme.secondaryLabel),
                             ),
                           ],
@@ -172,31 +168,20 @@ class _WorkHoursScreenState extends State<WorkHoursScreen> {
                   ),
                   const SizedBox(height: 20),
 
-                  Text(
-                    appName.toLowerCase().contains('brave') || appName.toLowerCase().contains('chrome') || appName.toLowerCase().contains('firefox')
-                        ? "OPEN WEBSITES & PAGES TODAY"
-                        : "PROJECTS & WINDOW ACTIVITIES TODAY",
-                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppTheme.secondaryLabel, letterSpacing: 0.5),
-                  ),
+                  const Text("WINDOW TITLES & PROJECTS",
+                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppTheme.secondaryLabel, letterSpacing: 0.5)),
                   const SizedBox(height: 10),
 
                   if (snapshot.connectionState == ConnectionState.waiting)
-                    const Padding(
-                      padding: EdgeInsets.all(30),
-                      child: Center(child: CupertinoActivityIndicator()),
-                    )
+                    const Padding(padding: EdgeInsets.all(24), child: Center(child: CupertinoActivityIndicator()))
                   else if (activities.isEmpty)
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 20),
-                      child: Center(child: Text("No detailed page activity recorded yet", style: TextStyle(color: AppTheme.secondaryLabel, fontSize: 13))),
-                    )
+                    const Padding(padding: EdgeInsets.all(20), child: Center(child: Text("No detailed window titles found.", style: TextStyle(color: AppTheme.secondaryLabel))))
                   else
-                    ConstrainedBox(
-                      constraints: const BoxConstraints(maxHeight: 300),
-                      child: SingleChildScrollView(
-                        physics: const BouncingScrollPhysics(),
-                        child: Container(
-                          decoration: BoxDecoration(color: AppTheme.background, borderRadius: BorderRadius.circular(14)),
+                    Flexible(
+                      child: Container(
+                        decoration: BoxDecoration(color: AppTheme.background, borderRadius: BorderRadius.circular(14)),
+                        child: SingleChildScrollView(
+                          physics: const BouncingScrollPhysics(),
                           child: Column(
                             children: List.generate(activities.length, (i) {
                               final act = activities[i];
@@ -278,92 +263,77 @@ class _WorkHoursScreenState extends State<WorkHoursScreen> {
           ),
         ),
 
-        // Stopwatch Display Card
+        // Telemetry Summary Hero Card (No confusing 00:00:00!)
         SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-            child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 32),
-              decoration: BoxDecoration(
-                color: AppTheme.secondaryBg,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Column(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: isClockedIn ? AppTheme.accentGreen.withValues(alpha: 0.15) : AppTheme.tertiaryBg,
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          width: 6, height: 6,
-                          decoration: BoxDecoration(
-                            color: isClockedIn || isDaemonActive ? AppTheme.accentGreen : AppTheme.accentOrange,
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: (isClockedIn || isDaemonActive ? AppTheme.accentGreen : AppTheme.accentOrange).withValues(alpha: 0.6),
-                                blurRadius: 8,
-                              ),
-                            ],
+            child: Builder(
+              builder: (context) {
+                double totalHoursTracked = 0.0;
+                for (final item in appBreakdown) {
+                  totalHoursTracked += (item['hours'] ?? 0.0).toDouble();
+                }
+                final displayHours = totalHoursTracked > 0 ? totalHoursTracked : totalWorkHours;
+
+                return Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: AppTheme.secondaryBg,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: AppTheme.tertiaryBg, width: 1),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: isDaemonActive ? AppTheme.accentGreen.withValues(alpha: 0.15) : AppTheme.accentOrange.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 6, height: 6,
+                                  decoration: BoxDecoration(
+                                    color: isDaemonActive ? AppTheme.accentGreen : AppTheme.accentOrange,
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  isDaemonActive ? "Daemon Active 🟢" : "Daemon Offline 🟧",
+                                  style: TextStyle(
+                                    fontSize: 12, fontWeight: FontWeight.w700,
+                                    color: isDaemonActive ? AppTheme.accentGreen : AppTheme.accentOrange,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 6),
-                        Text(
-                          isClockedIn ? "Recording Manual Session" : (isDaemonActive ? "Laptop Daemon Active 🟢" : "Laptop Daemon Offline 🟧"),
-                          style: TextStyle(
-                            fontSize: 12, fontWeight: FontWeight.w600,
-                            color: isClockedIn || isDaemonActive ? AppTheme.accentGreen : AppTheme.accentOrange,
+                          Text(
+                            formatHoursToReadableTime(displayHours),
+                            style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w800, color: AppTheme.accent),
                           ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  const Text(
-                    "MANUAL SESSION TIMER",
-                    style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: AppTheme.secondaryLabel, letterSpacing: 1),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    _formatDuration(elapsedSeconds),
-                    style: TextStyle(
-                      fontSize: 48, fontWeight: FontWeight.w200, letterSpacing: 2,
-                      fontFamily: '.SF UI Display',
-                      color: isClockedIn ? AppTheme.label : AppTheme.secondaryLabel,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    isClockedIn
-                        ? "Recording manual session..."
-                        : "Tap ▶ to start a manual session timer",
-                    style: const TextStyle(fontSize: 12, color: AppTheme.secondaryLabel, fontWeight: FontWeight.w500),
-                  ),
-                  const SizedBox(height: 20),
-                  GestureDetector(
-                    onTap: _toggleClock,
-                    child: Container(
-                      width: 64, height: 64,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: isClockedIn ? AppTheme.accentRed : AppTheme.accentGreen,
-                        boxShadow: [
-                          BoxShadow(
-                            color: (isClockedIn ? AppTheme.accentRed : AppTheme.accentGreen).withValues(alpha: 0.4),
-                            blurRadius: 18, offset: const Offset(0, 6)),
                         ],
                       ),
-                      child: Icon(isClockedIn ? Icons.stop_rounded : Icons.play_arrow_rounded,
-                          color: Colors.white, size: 32),
-                    ),
+                      const SizedBox(height: 12),
+                      const Text(
+                        "AUTOMATED LAPTOP TIME TRACKED TODAY",
+                        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppTheme.secondaryLabel, letterSpacing: 0.5),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        topApp != null ? "Top Focus: $topApp" : "No activity logged yet today",
+                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.label),
+                      ),
+                    ],
                   ),
-                ],
-              ),
+                );
+              },
             ),
           ),
         ),
@@ -490,21 +460,73 @@ class _WorkHoursScreenState extends State<WorkHoursScreen> {
             ),
           ),
 
-        // Recent Sessions Section
+        // Manual Stopwatch Timer (Compact Card at Bottom)
         SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(20, 24, 20, 8),
-            child: const Text("MANUAL SESSIONS",
+            child: const Text("MANUAL SESSION TIMELOGS",
                 style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.secondaryLabel, letterSpacing: 0.5)),
           ),
         ),
+
+        // Compact Manual Session Timer Control
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: AppTheme.secondaryBg,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: isClockedIn ? AppTheme.accentGreen : AppTheme.tertiaryBg, width: 1),
+              ),
+              child: Row(
+                children: [
+                  GestureDetector(
+                    onTap: _toggleClock,
+                    child: Container(
+                      width: 44, height: 44,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: isClockedIn ? AppTheme.accentRed : AppTheme.accentGreen,
+                      ),
+                      child: Icon(isClockedIn ? Icons.stop_rounded : Icons.play_arrow_rounded, color: Colors.white, size: 24),
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          isClockedIn ? "Recording Session: ${_formatDuration(elapsedSeconds)}" : "Manual Session Stopwatch",
+                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          isClockedIn ? "Tap stop button to save timelog" : "Tap play to manually clock in",
+                          style: const TextStyle(fontSize: 11, color: AppTheme.secondaryLabel),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (isClockedIn)
+                    Text(_formatDuration(elapsedSeconds),
+                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: AppTheme.accentGreen)),
+                ],
+              ),
+            ),
+          ),
+        ),
+
+        const SliverToBoxAdapter(child: SizedBox(height: 12)),
 
         if (logs.isEmpty)
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Container(
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(color: AppTheme.secondaryBg, borderRadius: BorderRadius.circular(14)),
                 child: const Center(child: Text("No manual sessions logged yet", style: TextStyle(color: AppTheme.tertiaryLabel, fontSize: 13))),
               ),
