@@ -413,6 +413,49 @@ class ApiService {
     }
   }
 
+  static Future<bool> deleteHabit(String habitId) async {
+    try {
+      final response = await http.delete(Uri.parse('$baseUrl/habits/$habitId'));
+      return response.statusCode == 200;
+    } catch (e) {
+      print("Error deleting habit: $e");
+      return false;
+    }
+  }
+
+  static Future<bool> deleteProject(String projectId) async {
+    try {
+      final response = await http.delete(Uri.parse('$baseUrl/projects/$projectId'));
+      return response.statusCode == 200;
+    } catch (e) {
+      print("Error deleting project: $e");
+      return false;
+    }
+  }
+
+  static Future<bool> deleteTask(String taskId) async {
+    try {
+      final response = await http.delete(Uri.parse('$baseUrl/projects/tasks/$taskId'));
+      return response.statusCode == 200;
+    } catch (e) {
+      print("Error deleting task: $e");
+      return false;
+    }
+  }
+
+  static Future<int> importGitHubIssues() async {
+    try {
+      final response = await http.post(Uri.parse('$baseUrl/integrations/github/import-issues'));
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        return (data['imported_tasks'] ?? 0) as int;
+      }
+    } catch (e) {
+      print("Error importing GitHub issues: $e");
+    }
+    return 0;
+  }
+
   static Future<bool> clearActivityLogs() async {
     try {
       final response = await http.post(Uri.parse('$baseUrl/tracker/clear-logs'));

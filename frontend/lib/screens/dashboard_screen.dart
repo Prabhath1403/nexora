@@ -16,9 +16,17 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
   int taskCount = 7;
   bool isLoading = false;
 
-  // Mock data for Habit Line Chart (Daily % completion over past 7 days)
-  final List<double> habitWeeklyTrend = [0.60, 0.80, 0.75, 1.00, 0.85, 0.90, 0.95];
+  // Dynamic Habit Line Chart & Streak Data
+  int habitStreakCount = 5;
+  List<double> habitWeeklyTrend = [0.60, 0.80, 0.75, 1.00, 0.85, 0.90, 0.95];
   final List<String> weekDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+
+  // Integration & Connections State
+  bool isGitHubConnected = false;
+  bool isGoogleConnected = false;
+  String? googleEmail;
+  List<dynamic> googleEvents = [];
+  int googleUnreadEmails = 0;
 
   // GitHub Contribution Matrix
   List<List<int>> githubContributionGrid = [];
@@ -47,8 +55,8 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
       "completedTasks": 9,
       "totalTasks": 12,
       "color": AppTheme.accent,
-      "priority": "High",
-      "trackedHours": "14.2h"
+      "priority": "HIGH",
+      "trackedHours": "9/12 tasks"
     },
     {
       "name": "Facial AI Pipeline",
@@ -57,8 +65,8 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
       "completedTasks": 4,
       "totalTasks": 10,
       "color": AppTheme.accentPurple,
-      "priority": "Medium",
-      "trackedHours": "8.5h"
+      "priority": "MEDIUM",
+      "trackedHours": "4/10 tasks"
     },
     {
       "name": "Fraud Controller",
@@ -67,8 +75,8 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
       "completedTasks": 5,
       "totalTasks": 9,
       "color": AppTheme.accentTeal,
-      "priority": "Medium",
-      "trackedHours": "6.1h"
+      "priority": "MEDIUM",
+      "trackedHours": "5/9 tasks"
     },
   ];
 
@@ -137,14 +145,40 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
     final trackerSummary = await ApiService.fetchTrackerSummary();
     final daemonStatus = await ApiService.fetchDaemonStatus();
     final breakdownData = await ApiService.fetchAppBreakdown();
+    final weeklyGrid = await ApiService.fetchWeeklyHabitGrid();
+    final googleSummary = await ApiService.fetchGoogleSummary();
+    final statusData = await ApiService.fetchIntegrationStatus();
 
     if (!mounted) return;
     setState(() {
       if (habits.isNotEmpty) habitCount = habits.length;
       if (tasks.isNotEmpty) taskCount = tasks.length;
+
+      if (weeklyGrid != null) {
+        if (weeklyGrid['streak_count'] != null) {
+          habitStreakCount = (weeklyGrid['streak_count'] as int);
+        }
+        if (weeklyGrid['weekly_trend'] != null && (weeklyGrid['weekly_trend'] as List).isNotEmpty) {
+          habitWeeklyTrend = (weeklyGrid['weekly_trend'] as List).map((e) => (e as num).toDouble()).toList();
+        }
+      }
+
+      if (statusData != null) {
+        isGitHubConnected = statusData['github']?['connected'] == true;
+        isGoogleConnected = statusData['google']?['connected'] == true;
+        googleEmail = statusData['google']?['email'];
+      }
+
+      if (googleSummary != null && googleSummary['connected'] == true) {
+        isGoogleConnected = true;
+        googleEmail = googleSummary['email'];
+        googleEvents = (googleSummary['events_today'] as List?) ?? [];
+        googleUnreadEmails = (googleSummary['unread_emails'] ?? 0) as int;
+      }
       
       // Load live GitHub activity & GraphQL contribution grid
       if (ghActivity != null) {
+        isGitHubConnected = true;
         if (ghActivity['username'] != null) {
           githubUsername = ghActivity['username'];
         }
@@ -161,18 +195,6 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
             "message": (c['message'] ?? '') as String,
             "time": (c['sha'] ?? 'commit') as String,
             "branch": (c['branch'] ?? 'main') as String,
-          }).toList();
-        }
-        if (ghActivity['active_repos'] != null && (ghActivity['active_repos'] as List).isNotEmpty) {
-          unfinishedProjects = (ghActivity['active_repos'] as List).take(4).map((r) => {
-            "name": (r['name'] ?? '').toString().split('/').last,
-            "repo": r['name'] ?? '',
-            "progress": 0.60,
-            "completedTasks": 6,
-            "totalTasks": 10,
-            "color": AppTheme.accent,
-            "priority": (r['language'] ?? 'Active').toString(),
-            "trackedHours": "Active",
           }).toList();
         }
         githubCommitsToday = ghActivity['total_commits_today'] ?? githubCommits.length;
@@ -200,15 +222,20 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
 
       // Load DB Projects if created
       if (projects.isNotEmpty) {
-        unfinishedProjects = projects.map((p) => {
-          "name": p['title'] ?? 'Untitled Project',
-          "repo": p['description'] ?? 'Local Project',
-          "progress": 0.50,
-          "completedTasks": 3,
-          "totalTasks": 6,
-          "color": AppTheme.accentPurple,
-          "priority": p['status'] ?? 'Active',
-          "trackedHours": "${p['target_hours'] ?? 10}h goal",
+        unfinishedProjects = projects.map((p) {
+          final totalT = (p['total_tasks'] ?? 0) as int;
+          final compT = (p['completed_tasks'] ?? 0) as int;
+          final prog = (p['progress'] ?? 0.0) as double;
+          return {
+            "name": (p['name'] ?? 'Untitled Project').toString(),
+            "repo": (p['github_repo'] ?? p['description'] ?? 'Local Project').toString(),
+            "progress": prog,
+            "completedTasks": compT,
+            "totalTasks": totalT,
+            "color": _hexToColor(p['color_hex'] as String?),
+            "priority": (p['status'] ?? 'Active').toString().toUpperCase(),
+            "trackedHours": "$compT/$totalT tasks",
+          };
         }).toList();
       }
       
@@ -254,16 +281,18 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                 borderRadius: BorderRadius.circular(14),
                 border: Border.all(color: AppTheme.accentOrange.withValues(alpha: 0.3), width: 0.8),
               ),
-              child: const Row(
+              child: Row(
                 children: [
-                  Text("🔥", style: TextStyle(fontSize: 28)),
-                  SizedBox(width: 12),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text("5 Day Habit Streak", style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
-                      Text("Keep your momentum going!", style: TextStyle(color: AppTheme.secondaryLabel, fontSize: 13)),
-                    ],
+                  const Text("🔥", style: TextStyle(fontSize: 28)),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text("$habitStreakCount Day Habit Streak", style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700), maxLines: 1, overflow: TextOverflow.ellipsis),
+                        const Text("Keep your momentum going!", style: TextStyle(color: AppTheme.secondaryLabel, fontSize: 13), maxLines: 1, overflow: TextOverflow.ellipsis),
+                      ],
+                    ),
                   ),
                 ],
               ),
@@ -570,10 +599,10 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                     style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.secondaryLabel, letterSpacing: 0.5)),
                 const SizedBox(height: 10),
                 _buildIOSGroupedSection([
-                  _buildConnectionRow("Laptop Activity Daemon", "Active (xdotool)", AppTheme.accentGreen),
-                  _buildConnectionRow("Antigravity Assistant Logs", "Auto-Mining", AppTheme.accentGreen),
-                  _buildConnectionRow("GitHub Webhook & API", "Connected", AppTheme.accentGreen),
-                  _buildConnectionRow("Google Calendar Sync", "Synced", AppTheme.accentGreen),
+                  _buildConnectionRow("Laptop Activity Daemon", isDaemonActive ? "Active (GNOME Tracker)" : "Offline", isDaemonActive ? AppTheme.accentGreen : AppTheme.accentOrange),
+                  _buildConnectionRow("GitHub Webhook & API", isGitHubConnected ? "Connected (@$githubUsername)" : "Not Connected", isGitHubConnected ? AppTheme.accentGreen : AppTheme.secondaryLabel),
+                  _buildConnectionRow("Google Calendar & Gmail", isGoogleConnected ? "Connected (${googleEmail ?? ''})" : "Not Connected", isGoogleConnected ? AppTheme.accentGreen : AppTheme.secondaryLabel),
+                  _buildConnectionRow("Zero-Manual Engine", "Auto-Tracking", AppTheme.accentGreen),
                 ]),
               ],
             ),
@@ -593,6 +622,15 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
       case 3: return const Color(0xFF26A641);
       case 4: return const Color(0xFF39D353);
       default: return AppTheme.tertiaryBg;
+    }
+  }
+
+  Color _hexToColor(String? hex) {
+    if (hex == null || !hex.startsWith('#')) return AppTheme.accent;
+    try {
+      return Color(int.parse(hex.replaceFirst('#', '0xFF')));
+    } catch (_) {
+      return AppTheme.accent;
     }
   }
 
@@ -835,8 +873,8 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
             const SizedBox(height: 14),
             Text(value, style: TextStyle(fontSize: 26, fontWeight: FontWeight.w700, color: color)),
             const SizedBox(height: 2),
-            Text(title, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
-            Text(subtitle, style: const TextStyle(color: AppTheme.secondaryLabel, fontSize: 11)),
+            Text(title, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13), maxLines: 1, overflow: TextOverflow.ellipsis),
+            Text(subtitle, style: const TextStyle(color: AppTheme.secondaryLabel, fontSize: 11), maxLines: 1, overflow: TextOverflow.ellipsis),
             const SizedBox(height: 12),
             ClipRRect(
               borderRadius: BorderRadius.circular(4),

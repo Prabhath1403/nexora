@@ -118,6 +118,84 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
     );
   }
 
+  void _showAddProjectSheet() {
+    final nameController = TextEditingController();
+    final descriptionController = TextEditingController();
+    final repoController = TextEditingController();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Material(
+        color: Colors.transparent,
+        child: StatefulBuilder(
+          builder: (context, setModalState) => Container(
+            padding: EdgeInsets.only(
+              top: 20, left: 20, right: 20,
+              bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+            ),
+            decoration: const BoxDecoration(
+              color: AppTheme.secondaryBg,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Center(
+                  child: Container(width: 36, height: 4, decoration: BoxDecoration(color: AppTheme.tertiaryLabel, borderRadius: BorderRadius.circular(2))),
+                ),
+                const SizedBox(height: 16),
+                const Text("New Software Project", style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.label)),
+                const SizedBox(height: 16),
+
+                _buildTextField(nameController, "Name", "e.g., AI Finance Mobile"),
+                const SizedBox(height: 10),
+                _buildTextField(descriptionController, "Description", "Brief scope & tech stack"),
+                const SizedBox(height: 10),
+                _buildTextField(repoController, "GitHub Repo", "owner/repository-name (optional)"),
+                const SizedBox(height: 20),
+
+                CupertinoButton.filled(
+                  borderRadius: BorderRadius.circular(12),
+                  onPressed: () async {
+                    if (nameController.text.trim().isNotEmpty) {
+                      await ApiService.createProject({
+                        'name': nameController.text.trim(),
+                        'description': descriptionController.text.trim(),
+                        'github_repo': repoController.text.trim().isNotEmpty ? repoController.text.trim() : null,
+                        'color_hex': '#6366F1',
+                        'status': 'active',
+                      });
+                      if (context.mounted) Navigator.pop(context);
+                      _loadAllData();
+                    }
+                  },
+                  child: const Text("Create Project"),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _importGitHubIssues() async {
+    final count = await ApiService.importGitHubIssues();
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(count > 0 ? "Imported $count GitHub issues into tasks! 🐙" : "No new GitHub issues found or GitHub not connected"),
+        backgroundColor: count > 0 ? AppTheme.accentGreen : AppTheme.tertiaryBg,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ),
+    );
+    _loadAllData();
+  }
+
   void _showAddLearningResourceSheet() {
     final titleController = TextEditingController();
     final urlController = TextEditingController();
@@ -348,7 +426,48 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text("ACTIVE PROJECTS", style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppTheme.secondaryLabel, letterSpacing: 0.5)),
+              Row(
+                children: [
+                  const Expanded(
+                    child: Text(
+                      "ACTIVE PROJECTS",
+                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppTheme.secondaryLabel, letterSpacing: 0.5),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: _importGitHubIssues,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                      decoration: BoxDecoration(color: AppTheme.tertiaryBg, borderRadius: BorderRadius.circular(6)),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.download_rounded, size: 12, color: AppTheme.accentGreen),
+                          SizedBox(width: 3),
+                          Text("Import GH", style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: AppTheme.accentGreen)),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  GestureDetector(
+                    onTap: _showAddProjectSheet,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                      decoration: BoxDecoration(color: AppTheme.accent.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(6)),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.add, size: 12, color: AppTheme.accent),
+                          SizedBox(width: 2),
+                          Text("Project", style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: AppTheme.accent)),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
               const SizedBox(height: 8),
               SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
