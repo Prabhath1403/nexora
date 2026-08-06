@@ -353,6 +353,31 @@ class _HabitsScreenState extends State<HabitsScreen> {
     );
   }
 
+  void _confirmDeleteHabit(String habitId, String title) {
+    showCupertinoDialog(
+      context: context,
+      builder: (context) => CupertinoAlertDialog(
+        title: const Text("Delete Habit"),
+        content: Text("Are you sure you want to delete '$title'?"),
+        actions: [
+          CupertinoDialogAction(
+            child: const Text("Cancel"),
+            onPressed: () => Navigator.pop(context),
+          ),
+          CupertinoDialogAction(
+            isDestructiveAction: true,
+            child: const Text("Delete"),
+            onPressed: () async {
+              Navigator.pop(context);
+              await ApiService.deleteHabit(habitId);
+              _loadGrid();
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildSpreadsheetHabitRow(dynamic habit) {
     final title = (habit['title'] ?? '').toString();
     final category = (habit['category'] ?? 'General').toString();
@@ -382,6 +407,13 @@ class _HabitsScreenState extends State<HabitsScreen> {
                         style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.label),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: () => _confirmDeleteHabit(habit['id'], title),
+                      child: const Padding(
+                        padding: EdgeInsets.only(left: 4),
+                        child: Icon(Icons.delete_outline_rounded, size: 15, color: AppTheme.tertiaryLabel),
                       ),
                     ),
                   ],
