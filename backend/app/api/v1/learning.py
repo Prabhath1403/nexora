@@ -107,3 +107,14 @@ async def delete_learning_resource(resource_id: UUID, db: AsyncSession = Depends
     await db.commit()
     return {"status": "ok", "message": "Learning resource deleted"}
 
+
+@router.post("/clear-all")
+@router.delete("/clear-all")
+async def clear_all_learning_resources(db: AsyncSession = Depends(get_db)):
+    """Wipes all learning resources so the user starts clean."""
+    from sqlalchemy import delete
+    await db.execute(delete(LearningResource))
+    await db.commit()
+    return {"status": "ok", "message": "All learning resources cleared"}
+
+
