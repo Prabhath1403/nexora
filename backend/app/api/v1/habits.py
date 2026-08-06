@@ -88,15 +88,6 @@ async def get_weekly_grid(db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Habit).where(Habit.is_archived == False).order_by(Habit.created_at.asc()))
     habits = result.scalars().all()
 
-    # Create default habits if none exist
-    if not habits:
-        for dh in DEFAULT_HABITS:
-            h = Habit(**dh)
-            db.add(h)
-        await db.commit()
-        result = await db.execute(select(Habit).where(Habit.is_archived == False).order_by(Habit.created_at.asc()))
-        habits = result.scalars().all()
-
     # Query telemetry data for each day of the week
     week_telemetry = {}
     for d in week_dates:
@@ -277,4 +268,20 @@ async def delete_habit(habit_id: UUID, db: AsyncSession = Depends(get_db)):
     habit.is_archived = True
     await db.commit()
     return {"status": "archived", "habit_id": str(habit_id)}
+
+
+@router.post("/clear-all")
+@router.delete("/clear-all")
+async def clear_all_habits(db: AsyncSession = Depends(get_db)):
+    """Wipes all habits and habit logs so the user starts with a 100% clean habit grid."""
+    await db.execute(select(HabitLog))
+    await db.execute(select(Habit))
+    
+    # Delete all logs and habits
+    from sqlalchemy import delete
+    await db.execute(delete(HabitLog))
+    await db.execute(delete(Habit))
+    await db.commit()
+    return {"status": "ok", "message": "All habits and logs cleared successfully"}
+
 

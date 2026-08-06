@@ -67,13 +67,6 @@ DEFAULT_LEARNING_RESOURCES = [
 async def list_learning_resources(db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(LearningResource).order_by(LearningResource.created_at.desc()))
     resources = result.scalars().all()
-    if not resources:
-        for item in DEFAULT_LEARNING_RESOURCES:
-            res = LearningResource(**item)
-            db.add(res)
-        await db.commit()
-        result = await db.execute(select(LearningResource).order_by(LearningResource.created_at.desc()))
-        resources = result.scalars().all()
     return resources
 
 @router.post("/")
