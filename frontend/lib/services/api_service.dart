@@ -2,8 +2,8 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class ApiService {
-  // Local development backend URL (Accessible by computer & physical phone over Wi-Fi)
-  static String baseUrl = "http://192.168.14.235:8000/api/v1";
+  // Oracle Cloud Production API URL
+  static String baseUrl = "http://129.159.237.247/api/v1";
 
   // --- Integrations & Telemetry ---
 

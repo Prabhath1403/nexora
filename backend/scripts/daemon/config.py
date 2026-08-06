@@ -6,7 +6,7 @@ import os
 from pathlib import Path
 
 # API & Timers
-NUCLEUS_API_URL = os.environ.get("NUCLEUS_API_URL", "http://localhost:8000/api/v1/tracker/ping")
+NUCLEUS_API_URL = os.environ.get("NUCLEUS_API_URL", "http://129.159.237.247/api/v1/tracker/ping")
 PING_INTERVAL = int(os.environ.get("NUCLEUS_PING_INTERVAL", "30"))
 IDLE_THRESHOLD_MS = int(os.environ.get("NUCLEUS_IDLE_THRESHOLD_MS", "180000"))   # 3 min
 AFK_THRESHOLD_MS = int(os.environ.get("NUCLEUS_AFK_THRESHOLD_MS", "600000"))     # 10 min
